@@ -65,7 +65,7 @@ public class PortalPageMediaResource extends AbstractResource {
     })
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response attachMedia(
+    public Response attachPortalPageMedia(
             @PathParam("page") String page,
             @Context final HttpServletRequest request,
             @FormDataParam("file") InputStream uploadedInputStream,
@@ -101,7 +101,7 @@ public class PortalPageMediaResource extends AbstractResource {
     @Permissions({
             @Permission(value = RolePermission.ENVIRONMENT_DOCUMENTATION, acls = RolePermissionAction.READ)
     })
-    public Response getMedia(@PathParam("page") String page) {
+    public Response getPortalPageMedia(@PathParam("page") String page) {
         final PageEntity currentPage = pageService.findById(page);
         List<MediaEntity> pageMedia = mediaService.findAllWithoutContent(currentPage.getAttachedMedia());
 

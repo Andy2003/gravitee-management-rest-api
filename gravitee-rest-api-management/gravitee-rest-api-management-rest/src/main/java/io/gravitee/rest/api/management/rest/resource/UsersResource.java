@@ -23,7 +23,6 @@ import io.gravitee.rest.api.management.rest.security.Permissions;
 import io.gravitee.rest.api.model.NewExternalUserEntity;
 import io.gravitee.rest.api.model.UserEntity;
 import io.gravitee.rest.api.model.permissions.RolePermission;
-import io.gravitee.rest.api.service.CustomUserFieldService;
 import io.gravitee.rest.api.service.UserService;
 import io.swagger.annotations.*;
 
@@ -56,9 +55,6 @@ public class UsersResource extends AbstractResource {
 
 	@Inject
 	private UserService userService;
-
-	@Inject
-	private CustomUserFieldService customUserFieldService;
 
 	@GET
 	@Permissions(@Permission(value = RolePermission.ORGANIZATION_USERS, acls = READ))

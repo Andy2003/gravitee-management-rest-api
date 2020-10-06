@@ -238,7 +238,7 @@ public class UserResource extends AbstractResource {
             @ApiResponse(code = 200, message = "Processed user"),
             @ApiResponse(code = 404, message = "User not found"),
             @ApiResponse(code = 500, message = "Internal server error")})
-    public Response validateRegistration(@PathParam("id") String userId, boolean accepted) {
+    public Response validateUserRegistration(boolean accepted) {
         return Response
                 .ok(userService.processRegistration(userId, accepted))
                 .build();
