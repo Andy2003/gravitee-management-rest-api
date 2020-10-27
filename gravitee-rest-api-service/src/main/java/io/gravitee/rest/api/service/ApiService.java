@@ -100,7 +100,7 @@ public interface ApiService {
         updateApiEntity.setProperties(apiEntity.getProperties());
         updateApiEntity.setDescription(apiEntity.getDescription());
         updateApiEntity.setGroups(apiEntity.getGroups());
-        updateApiEntity.setPaths(apiEntity.getPaths());
+        updateApiEntity.setPaths(apiEntity.getPathRules());
         updateApiEntity.setPicture(apiEntity.getPicture());
         updateApiEntity.setResources(apiEntity.getResources());
         updateApiEntity.setTags(apiEntity.getTags());

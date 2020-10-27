@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import io.gravitee.common.http.HttpMethod;
-import io.gravitee.definition.jackson.datatype.GraviteeMapper;
 import io.gravitee.definition.model.*;
 import io.gravitee.definition.model.endpoint.HttpEndpoint;
 import io.gravitee.repository.exceptions.TechnicalException;
@@ -34,8 +33,10 @@ import io.gravitee.rest.api.model.api.ApiEntity;
 import io.gravitee.rest.api.model.parameters.Key;
 import io.gravitee.rest.api.model.permissions.SystemRole;
 import io.gravitee.rest.api.service.impl.ApiServiceImpl;
+import io.gravitee.rest.api.service.jackson.GraviteeMapper2;
 import io.gravitee.rest.api.service.jackson.filter.ApiPermissionFilter;
 import io.gravitee.rest.api.service.jackson.ser.api.*;
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +45,8 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
@@ -73,7 +76,7 @@ public class ApiService_ExportAsJsonTest {
     @Mock
     private MembershipRepository membershipRepository;
     @Spy
-    private ObjectMapper objectMapper = new GraviteeMapper();
+    private ObjectMapper objectMapper = new GraviteeMapper2();
     @Mock
     private MembershipService membershipService;
     @Mock
@@ -254,22 +257,22 @@ public class ApiService_ExportAsJsonTest {
     }
 
     @Test
-    public void shouldConvertAsJsonForExport() throws TechnicalException, IOException {
+    public void shouldConvertAsJsonForExport() throws TechnicalException, IOException, JSONException {
         shouldConvertAsJsonForExport(ApiSerializer.Version.DEFAULT, null);
     }
 
     @Test
-    public void shouldConvertAsJsonForExport_1_15() throws TechnicalException, IOException {
+    public void shouldConvertAsJsonForExport_1_15() throws TechnicalException, IOException, JSONException {
         shouldConvertAsJsonForExport(ApiSerializer.Version.V_1_15, "1_15");
     }
 
     @Test
-    public void shouldConvertAsJsonForExport_1_20() throws TechnicalException, IOException {
+    public void shouldConvertAsJsonForExport_1_20() throws TechnicalException, IOException, JSONException {
         shouldConvertAsJsonForExport(ApiSerializer.Version.V_1_20, "1_20");
     }
 
     @Test
-    public void shouldConvertAsJsonForExport_1_25() throws TechnicalException, IOException {
+    public void shouldConvertAsJsonForExport_1_25() throws TechnicalException, IOException, JSONException {
         shouldConvertAsJsonForExport(ApiSerializer.Version.V_1_25, "1_25");
     }
 
@@ -372,7 +375,10 @@ public class ApiService_ExportAsJsonTest {
 
         try {
             io.gravitee.definition.model.Api apiDefinition = new io.gravitee.definition.model.Api();
-            apiDefinition.setPaths(Collections.emptyMap());
+	        Path path = new Path();
+	        path.setPath("/");
+	        path.setRules(Collections.emptyList());
+	        apiDefinition.setPaths(Collections.singletonMap("/", path));
             apiDefinition.setProxy(proxy);
             String definition = objectMapper.writeValueAsString(apiDefinition);
             api.setDefinition(definition);
@@ -411,14 +417,14 @@ public class ApiService_ExportAsJsonTest {
     }
 
 
-    private void shouldConvertAsJsonForExport(ApiSerializer.Version version, String filename) throws IOException {
+    private void shouldConvertAsJsonForExport(ApiSerializer.Version version, String filename) throws IOException, JSONException {
         String jsonForExport = apiService.exportAsJson(API_ID, version.getVersion(), SystemRole.PRIMARY_OWNER.name());
 
         URL url = Resources.getResource("io/gravitee/rest/api/management/service/export-convertAsJsonForExport" + (filename != null ? "-" + filename : "") + ".json");
         String expectedJson = Resources.toString(url, Charsets.UTF_8);
 
         assertThat(jsonForExport).isNotNull();
-        assertThat(objectMapper.readTree(expectedJson)).isEqualTo(objectMapper.readTree(jsonForExport));
+        JSONAssert.assertEquals(expectedJson, jsonForExport, JSONCompareMode.STRICT);
     }
 
     private void shouldConvertAsJsonWithoutMembers(ApiSerializer.Version version, String filename) throws IOException {

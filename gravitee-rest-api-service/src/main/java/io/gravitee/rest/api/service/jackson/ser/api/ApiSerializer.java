@@ -26,7 +26,6 @@ import io.gravitee.rest.api.model.documentation.PageQuery;
 import io.gravitee.rest.api.service.*;
 import org.springframework.context.ApplicationContext;
 
-import javax.print.attribute.standard.Media;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -81,9 +80,9 @@ public abstract class ApiSerializer extends StdSerializer<ApiEntity> {
         if (apiEntity.getPicture() != null) {
             jsonGenerator.writeObjectField("picture", apiEntity.getPicture());
         }
-        if (apiEntity.getPaths() != null) {
+        if (apiEntity.getPathRules() != null) {
             jsonGenerator.writeObjectFieldStart("paths");
-            for (Map.Entry<String, Path> entry : apiEntity.getPaths().entrySet()) {
+            for (Map.Entry<String, Path> entry : apiEntity.getPathRules().entrySet()) {
                 jsonGenerator.writeObjectField(entry.getKey(), entry.getValue());
             }
             jsonGenerator.writeEndObject();

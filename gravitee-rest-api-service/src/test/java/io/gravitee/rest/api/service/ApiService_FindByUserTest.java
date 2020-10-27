@@ -18,7 +18,6 @@ package io.gravitee.rest.api.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import io.gravitee.definition.jackson.datatype.GraviteeMapper;
 import io.gravitee.repository.exceptions.TechnicalException;
 import io.gravitee.repository.management.api.ApiRepository;
 import io.gravitee.repository.management.api.search.ApiCriteria;
@@ -27,6 +26,7 @@ import io.gravitee.rest.api.model.*;
 import io.gravitee.rest.api.model.api.ApiEntity;
 import io.gravitee.rest.api.model.application.ApplicationListItem;
 import io.gravitee.rest.api.service.impl.ApiServiceImpl;
+import io.gravitee.rest.api.service.jackson.GraviteeMapper2;
 import io.gravitee.rest.api.service.jackson.filter.ApiPermissionFilter;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,7 +66,7 @@ public class ApiService_FindByUserTest {
     @Mock
     private SubscriptionService subscriptionService;
     @Spy
-    private ObjectMapper objectMapper = new GraviteeMapper();
+    private ObjectMapper objectMapper = new GraviteeMapper2();
     @Mock
     private Api api;
     @Mock

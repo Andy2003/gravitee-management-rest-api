@@ -16,12 +16,12 @@
 package io.gravitee.rest.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.gravitee.definition.jackson.datatype.GraviteeMapper;
 import io.gravitee.definition.model.VirtualHost;
-import io.gravitee.rest.api.service.exceptions.ApiContextPathAlreadyExistsException;
-import io.gravitee.rest.api.service.impl.VirtualHostServiceImpl;
 import io.gravitee.repository.management.api.ApiRepository;
 import io.gravitee.repository.management.model.Api;
+import io.gravitee.rest.api.service.exceptions.ApiContextPathAlreadyExistsException;
+import io.gravitee.rest.api.service.impl.VirtualHostServiceImpl;
+import io.gravitee.rest.api.service.jackson.GraviteeMapper2;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -45,7 +45,7 @@ public class VirtualHostServiceTest {
     private VirtualHostService virtualHostService = new VirtualHostServiceImpl();
 
     @Spy
-    private ObjectMapper objectMapper = new GraviteeMapper();
+    private ObjectMapper objectMapper = new GraviteeMapper2();
 
     @Mock
     private ApiRepository apiRepository;

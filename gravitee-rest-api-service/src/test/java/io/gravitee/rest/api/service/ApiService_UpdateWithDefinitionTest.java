@@ -18,12 +18,18 @@ package io.gravitee.rest.api.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import io.gravitee.definition.jackson.datatype.GraviteeMapper;
+import io.gravitee.repository.exceptions.TechnicalException;
+import io.gravitee.repository.management.api.ApiRepository;
+import io.gravitee.repository.management.model.Api;
+import io.gravitee.repository.management.model.ApiLifecycleState;
 import io.gravitee.rest.api.model.*;
 import io.gravitee.rest.api.model.api.ApiEntity;
 import io.gravitee.rest.api.model.permissions.RoleScope;
 import io.gravitee.rest.api.model.permissions.SystemRole;
 import io.gravitee.rest.api.service.impl.ApiServiceImpl;
+import io.gravitee.rest.api.service.jackson.GraviteeMapper2;
+import io.gravitee.rest.api.service.jackson.ser.ApiMapper;
+import io.gravitee.rest.api.service.jackson.ser.ApiMapperImpl;
 import io.gravitee.rest.api.service.search.SearchEngineService;
 import io.gravitee.repository.exceptions.TechnicalException;
 import io.gravitee.repository.management.api.ApiRepository;
@@ -70,7 +76,7 @@ public class ApiService_UpdateWithDefinitionTest {
     @Mock
     private ApiRepository apiRepository;
     @Spy
-    private ObjectMapper objectMapper = new GraviteeMapper();
+    private ObjectMapper objectMapper = new GraviteeMapper2();
     @Mock
     private Api api;
     @Mock
@@ -95,6 +101,8 @@ public class ApiService_UpdateWithDefinitionTest {
     private VirtualHostService virtualHostService;
     @Mock
     private CategoryService categoryService;
+    @Spy
+    private ApiMapper apiMapper = new ApiMapperImpl();
 
     @Before
     public void init() {

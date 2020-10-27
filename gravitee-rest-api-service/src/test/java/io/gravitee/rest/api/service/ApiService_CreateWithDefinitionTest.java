@@ -23,6 +23,8 @@ import io.gravitee.rest.api.model.api.ApiEntity;
 import io.gravitee.rest.api.model.permissions.RoleScope;
 import io.gravitee.rest.api.model.permissions.SystemRole;
 import io.gravitee.rest.api.service.impl.ApiServiceImpl;
+import io.gravitee.rest.api.service.jackson.ser.ApiMapper;
+import io.gravitee.rest.api.service.jackson.ser.ApiMapperImpl;
 import io.gravitee.rest.api.service.search.SearchEngineService;
 import io.gravitee.repository.exceptions.TechnicalException;
 import io.gravitee.repository.management.api.ApiRepository;
@@ -37,6 +39,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -101,6 +104,8 @@ public class ApiService_CreateWithDefinitionTest {
     private ApiMetadataService apiMetadataService;
     @Mock
     private AlertService alertService;
+    @Spy
+    private ApiMapper apiMapper = new ApiMapperImpl();
 
     @Before
     public void init() {

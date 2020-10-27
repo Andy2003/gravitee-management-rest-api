@@ -116,6 +116,7 @@
                 <artifactId>gravitee-expression-language</artifactId>
                 <version>${gravitee-expression-language.version}</version>
             </dependency>
+<!--             TODO remove -->
             <dependency>
                 <groupId>io.gravitee.definition</groupId>
                 <artifactId>gravitee-definition-jackson</artifactId>

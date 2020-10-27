@@ -16,20 +16,20 @@
 package io.gravitee.rest.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.gravitee.definition.jackson.datatype.GraviteeMapper;
-import io.gravitee.rest.api.model.UserEntity;
-import io.gravitee.rest.api.model.api.ApiEntity;
-import io.gravitee.rest.api.model.api.NewApiEntity;
-import io.gravitee.rest.api.service.exceptions.ApiAlreadyExistsException;
-import io.gravitee.rest.api.service.exceptions.TechnicalManagementException;
-import io.gravitee.rest.api.service.impl.ApiServiceImpl;
-import io.gravitee.rest.api.service.search.SearchEngineService;
 import io.gravitee.repository.exceptions.TechnicalException;
 import io.gravitee.repository.management.api.ApiRepository;
 import io.gravitee.repository.management.model.Api;
 import io.gravitee.repository.management.model.ApiLifecycleState;
 import io.gravitee.repository.management.model.LifecycleState;
 import io.gravitee.repository.management.model.Visibility;
+import io.gravitee.rest.api.model.UserEntity;
+import io.gravitee.rest.api.model.api.ApiEntity;
+import io.gravitee.rest.api.model.api.NewApiEntity;
+import io.gravitee.rest.api.service.exceptions.ApiAlreadyExistsException;
+import io.gravitee.rest.api.service.exceptions.TechnicalManagementException;
+import io.gravitee.rest.api.service.impl.ApiServiceImpl;
+import io.gravitee.rest.api.service.jackson.GraviteeMapper2;
+import io.gravitee.rest.api.service.search.SearchEngineService;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,7 +68,7 @@ public class ApiService_CreateTest {
     @Mock
     private MembershipService membershipService;
     @Spy
-    private ObjectMapper objectMapper = new GraviteeMapper();
+    private ObjectMapper objectMapper = new GraviteeMapper2();
     @Mock
     private NewApiEntity newApi;
     @Mock
@@ -190,10 +190,10 @@ public class ApiService_CreateTest {
 
         assertNotNull(apiEntity);
         assertEquals(API_NAME, apiEntity.getName());
-        assertNotNull(apiEntity.getPaths());
-        /*assertTrue("paths not empty", !apiEntity.getPaths().isEmpty());
-        assertEquals("paths.size == 1", apiEntity.getPaths().size(), 1);
-        assertEquals("path == /* ", apiEntity.getPaths().get(0).getPath(), "/*");*/
+        assertNotNull(apiEntity.getPathRules());
+        /*assertTrue("paths not empty", !apiEntity.getPathRules().isEmpty());
+        assertEquals("paths.size == 1", apiEntity.getPathRules().size(), 1);
+        assertEquals("path == /* ", apiEntity.getPathRules().get(0).getPath(), "/*");*/
 
         verify(apiRepository, times(1)).create(any());
         verify(genericNotificationConfigService, times(1)).create(any());

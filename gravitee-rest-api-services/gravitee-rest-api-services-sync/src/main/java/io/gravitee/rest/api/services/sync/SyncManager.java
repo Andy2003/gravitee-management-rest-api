@@ -26,7 +26,6 @@ import io.gravitee.repository.management.api.search.EventCriteria;
 import io.gravitee.repository.management.api.search.builder.PageableBuilder;
 import io.gravitee.repository.management.model.Dictionary;
 import io.gravitee.repository.management.model.*;
-import io.gravitee.rest.api.model.MemberEntity;
 import io.gravitee.rest.api.model.MembershipEntity;
 import io.gravitee.rest.api.model.MembershipReferenceType;
 import io.gravitee.rest.api.model.PrimaryOwnerEntity;
@@ -304,7 +303,7 @@ public class SyncManager {
                         io.gravitee.definition.model.Api.class);
 
                 apiEntity.setProxy(apiDefinition.getProxy());
-                apiEntity.setPaths(apiDefinition.getPaths());
+                apiEntity.setPathRules(apiDefinition.getPaths());
                 apiEntity.setServices(apiDefinition.getServices());
                 apiEntity.setResources(apiDefinition.getResources());
                 apiEntity.setProperties(apiDefinition.getProperties());

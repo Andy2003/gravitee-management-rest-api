@@ -18,7 +18,6 @@ package io.gravitee.rest.api.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import io.gravitee.definition.jackson.datatype.GraviteeMapper;
 import io.gravitee.repository.exceptions.TechnicalException;
 import io.gravitee.repository.management.api.ApiQualityRuleRepository;
 import io.gravitee.repository.management.api.ApiRepository;
@@ -27,16 +26,11 @@ import io.gravitee.repository.management.model.LifecycleState;
 import io.gravitee.rest.api.model.MembershipReferenceType;
 import io.gravitee.rest.api.model.PlanEntity;
 import io.gravitee.rest.api.model.PlanStatus;
-import io.gravitee.rest.api.service.AuditService;
-import io.gravitee.rest.api.service.EventService;
-import io.gravitee.rest.api.service.PlanService;
-import io.gravitee.rest.api.service.SubscriptionService;
-import io.gravitee.rest.api.service.TopApiService;
 import io.gravitee.rest.api.service.exceptions.ApiNotDeletableException;
 import io.gravitee.rest.api.service.exceptions.ApiRunningStateException;
 import io.gravitee.rest.api.service.impl.ApiServiceImpl;
+import io.gravitee.rest.api.service.jackson.GraviteeMapper2;
 import io.gravitee.rest.api.service.jackson.filter.ApiPermissionFilter;
-
 import io.gravitee.rest.api.service.search.SearchEngineService;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,7 +59,7 @@ public class ApiService_DeleteTest {
     private ApiServiceImpl apiService = new ApiServiceImpl();
 
     @Spy
-    private ObjectMapper objectMapper = new GraviteeMapper();
+    private ObjectMapper objectMapper = new GraviteeMapper2();
     @Mock
     private ApiRepository apiRepository;
     @Mock

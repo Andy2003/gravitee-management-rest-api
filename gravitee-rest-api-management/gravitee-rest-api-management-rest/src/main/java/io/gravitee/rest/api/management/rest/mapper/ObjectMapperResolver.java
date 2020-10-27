@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import io.gravitee.definition.jackson.datatype.GraviteeMapper;
+import io.gravitee.rest.api.service.jackson.GraviteeMapper2;
 import io.gravitee.rest.api.service.jackson.filter.ApiPermissionFilter;
 
 import javax.ws.rs.ext.ContextResolver;
@@ -41,7 +41,7 @@ public class ObjectMapperResolver implements ContextResolver<ObjectMapper> {
     private final ObjectMapper mapper;
 
     public ObjectMapperResolver() {
-        mapper = new GraviteeMapper();
+        mapper = new GraviteeMapper2();
 
         //because Permissions are represented as char[]
         mapper.enable(SerializationFeature.WRITE_CHAR_ARRAYS_AS_JSON_ARRAYS);

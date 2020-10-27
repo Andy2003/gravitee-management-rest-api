@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import io.gravitee.common.component.Lifecycle;
 import io.gravitee.common.http.HttpMethod;
 import io.gravitee.definition.model.*;
 import io.gravitee.definition.model.endpoint.HttpEndpoint;
@@ -60,6 +59,8 @@ import io.gravitee.rest.api.service.common.RandomString;
 import io.gravitee.rest.api.service.exceptions.*;
 import io.gravitee.rest.api.service.impl.search.SearchResult;
 import io.gravitee.rest.api.service.impl.upgrade.DefaultMetadataUpgrader;
+import io.gravitee.rest.api.service.jackson.ser.ApiMapper;
+import io.gravitee.rest.api.service.jackson.ser.JApiEntity;
 import io.gravitee.rest.api.service.jackson.ser.api.ApiSerializer;
 import io.gravitee.rest.api.service.notification.ApiHook;
 import io.gravitee.rest.api.service.notification.HookScope;
@@ -183,6 +184,8 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
     private ImportConfiguration importConfiguration;
     @Autowired
     private MediaService mediaService;
+    @Autowired
+    private ApiMapper apiMapper;
 
     private static final Pattern LOGGING_MAX_DURATION_PATTERN = Pattern.compile("(?<before>.*)\\#request.timestamp\\s*\\<\\=?\\s*(?<timestamp>\\d*)l(?<after>.*)");
     private static final String LOGGING_MAX_DURATION_CONDITION = "#request.timestamp <= %dl";
@@ -1215,8 +1218,8 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
     }
 
     private void removeDescriptionFromPolicies(final ApiEntity api) {
-        if (api.getPaths() != null) {
-            api.getPaths().forEach((s, path) -> {
+        if (api.getPathRules() != null) {
+            api.getPathRules().forEach((s, path) -> {
                 if (path.getRules() != null) {
                     path.getRules().forEach(rule -> rule.setDescription(""));
                 }
@@ -1407,10 +1410,15 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
     }
 
     private UpdateApiEntity convertToEntity(String apiDefinition, JsonNode jsonNode, String apiId) throws JsonProcessingException {
-        final UpdateApiEntity importedApi = objectMapper
-            // because definition could contains other values than the api itself (pages, members)
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .readValue(apiDefinition, UpdateApiEntity.class);
+        JApiEntity jApiEntity = objectMapper
+                // because definition could contains other values than the api itself (pages, members)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .readValue(apiDefinition, JApiEntity.class);
+        final UpdateApiEntity importedApi = apiMapper.map(jApiEntity);
+//        final UpdateApiEntity importedApi = objectMapper
+//            // because definition could contains other values than the api itself (pages, members)
+//            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+//            .readValue(apiDefinition, UpdateApiEntity.class);
 
         // Initialize with a default path
         if (importedApi.getPaths() == null || importedApi.getPaths().isEmpty()) {
@@ -1797,7 +1805,7 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
         apiModelEntity.setState(apiEntity.getState());
         apiModelEntity.setTags(apiEntity.getTags());
         apiModelEntity.setServices(apiEntity.getServices());
-        apiModelEntity.setPaths(apiEntity.getPaths());
+        apiModelEntity.setPaths(apiEntity.getPathRules());
         apiModelEntity.setPicture(apiEntity.getPicture());
         apiModelEntity.setPrimaryOwner(apiEntity.getPrimaryOwner());
         apiModelEntity.setProperties(apiEntity.getProperties());
@@ -1991,7 +1999,7 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
         updateApiEntity.setTags(apiEntity.getTags());
         updateApiEntity.setCategories(apiEntity.getCategories());
         updateApiEntity.setVisibility(apiEntity.getVisibility());
-        updateApiEntity.setPaths(apiEntity.getPaths());
+        updateApiEntity.setPaths(apiEntity.getPathRules());
         updateApiEntity.setPathMappings(apiEntity.getPathMappings());
         updateApiEntity.setDisableMembershipNotifications(apiEntity.isDisableMembershipNotifications());
         return updateApiEntity;
@@ -2203,72 +2211,26 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
 
     private ApiEntity convert(Api api, UserEntity primaryOwner, List<CategoryEntity> categories) {
         ApiEntity apiEntity = new ApiEntity();
-
-        apiEntity.setId(api.getId());
-        apiEntity.setName(api.getName());
-        apiEntity.setDeployedAt(api.getDeployedAt());
-        apiEntity.setCreatedAt(api.getCreatedAt());
-        apiEntity.setGroups(api.getGroups());
-        apiEntity.setDisableMembershipNotifications(api.isDisableMembershipNotifications());
-
         if (api.getDefinition() != null) {
             try {
-                io.gravitee.definition.model.Api apiDefinition = objectMapper.readValue(api.getDefinition(),
-                    io.gravitee.definition.model.Api.class);
-
-                apiEntity.setProxy(apiDefinition.getProxy());
-                apiEntity.setPaths(apiDefinition.getPaths());
-                apiEntity.setServices(apiDefinition.getServices());
-                apiEntity.setResources(apiDefinition.getResources());
-                apiEntity.setProperties(apiDefinition.getProperties());
-                apiEntity.setTags(apiDefinition.getTags());
-
-                // Issue https://github.com/gravitee-io/issues/issues/3356
-                if (apiDefinition.getProxy().getVirtualHosts() != null &&
-                    !apiDefinition.getProxy().getVirtualHosts().isEmpty()) {
-                    apiEntity.setContextPath(apiDefinition.getProxy().getVirtualHosts().get(0).getPath());
-                }
-
-                if (apiDefinition.getPathMappings() != null) {
-                    apiEntity.setPathMappings(new HashSet<>(apiDefinition.getPathMappings().keySet()));
-                }
-                apiEntity.setResponseTemplates(apiDefinition.getResponseTemplates());
+                JApiEntity apiDefinition = objectMapper.readValue(api.getDefinition(), JApiEntity.class);
+                apiMapper.update(apiDefinition, apiEntity);
             } catch (IOException ioe) {
                 LOGGER.error("Unexpected error while generating API definition", ioe);
             }
         }
-        apiEntity.setUpdatedAt(api.getUpdatedAt());
-        apiEntity.setVersion(api.getVersion());
-        apiEntity.setDescription(api.getDescription());
-        apiEntity.setPicture(api.getPicture());
-        apiEntity.setLabels(api.getLabels());
 
-        final Set<String> apiCategories = api.getCategories();
-        if (apiCategories != null) {
+        apiMapper.update(api, apiEntity);
+
+        if (apiEntity.getCategories() != null) {
             if (categories == null) {
                 categories = categoryService.findAll();
             }
-            final Set<String> newApiCategories = new HashSet<>(apiCategories.size());
-            for (final String apiView : apiCategories) {
-                final Optional<CategoryEntity> optionalView = categories.stream().filter(c -> apiView.equals(c.getId())).findAny();
-                optionalView.ifPresent(category -> newApiCategories.add(category.getKey()));
-            }
-            apiEntity.setCategories(newApiCategories);
-        }
-        final LifecycleState state = api.getLifecycleState();
-        if (state != null) {
-            apiEntity.setState(Lifecycle.State.valueOf(state.name()));
-        }
-        if (api.getVisibility() != null) {
-            apiEntity.setVisibility(io.gravitee.rest.api.model.Visibility.valueOf(api.getVisibility().toString()));
+            apiEntity.getCategories().retainAll(categories.stream().map(CategoryEntity::getId).collect(toSet()));
         }
 
         if (primaryOwner != null) {
             apiEntity.setPrimaryOwner(new PrimaryOwnerEntity(primaryOwner));
-        }
-        final ApiLifecycleState lifecycleState = api.getApiLifecycleState();
-        if (lifecycleState != null) {
-            apiEntity.setLifecycleState(io.gravitee.rest.api.model.api.ApiLifecycleState.valueOf(lifecycleState.name()));
         }
 
         if (parameterService.findAsBoolean(Key.API_REVIEW_ENABLED)) {

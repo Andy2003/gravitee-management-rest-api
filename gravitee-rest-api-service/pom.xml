@@ -24,6 +24,7 @@
 		<jsoup.version>1.10.1</jsoup.version>
 		<json-patch.version>1.9</json-patch.version>
 		<swagger-parser.version>2.0.21</swagger-parser.version>
+		<org.mapstruct.version>1.4.1.Final</org.mapstruct.version>
 	</properties>
 
 	<parent>
@@ -227,5 +228,35 @@
             <groupId>io.gravitee.node</groupId>
             <artifactId>gravitee-node-api</artifactId>
         </dependency>
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>${org.mapstruct.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.skyscreamer</groupId>
+			<artifactId>jsonassert</artifactId>
+			<version>1.5.0</version>
+			<scope>test</scope>
+		</dependency>
     </dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>${org.mapstruct.version}</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

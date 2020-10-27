@@ -18,7 +18,6 @@ package io.gravitee.rest.api.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import io.gravitee.definition.jackson.datatype.GraviteeMapper;
 import io.gravitee.definition.model.*;
 import io.gravitee.definition.model.endpoint.HttpEndpoint;
 import io.gravitee.repository.exceptions.TechnicalException;
@@ -34,7 +33,10 @@ import io.gravitee.rest.api.model.permissions.RoleScope;
 import io.gravitee.rest.api.model.permissions.SystemRole;
 import io.gravitee.rest.api.service.exceptions.*;
 import io.gravitee.rest.api.service.impl.ApiServiceImpl;
+import io.gravitee.rest.api.service.jackson.GraviteeMapper2;
 import io.gravitee.rest.api.service.jackson.filter.ApiPermissionFilter;
+import io.gravitee.rest.api.service.jackson.ser.ApiMapper;
+import io.gravitee.rest.api.service.jackson.ser.ApiMapperImpl;
 import io.gravitee.rest.api.service.search.SearchEngineService;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -138,9 +140,10 @@ public class ApiService_UpdateTest {
     @Mock
     private RoleService roleService;
     @Spy
-    private ObjectMapper objectMapper = new GraviteeMapper();
-    @Mock
-    private UpdateApiEntity existingApi;
+    private ObjectMapper objectMapper = new GraviteeMapper2();
+
+    private UpdateApiEntity existingApi = new UpdateApiEntity();
+
     @Mock
     private Api api;
     @Mock
@@ -161,6 +164,8 @@ public class ApiService_UpdateTest {
     private CategoryService categoryService;
     @Mock
     private NotifierService notifierService;
+    @Spy
+    private ApiMapper apiMapper = new ApiMapperImpl();
 
     @Before
     public void setUp() {
@@ -208,17 +213,17 @@ public class ApiService_UpdateTest {
 
     @Test(expected = TechnicalManagementException.class)
     public void shouldNotUpdateBecauseTechnicalException() throws TechnicalException {
-        when(existingApi.getName()).thenReturn(API_NAME);
-        when(existingApi.getVersion()).thenReturn("v1");
-        when(existingApi.getDescription()).thenReturn("Ma description");
-        final Proxy proxy = mock(Proxy.class);
+        existingApi.setName(API_NAME);
+        existingApi.setVersion("v1");
+        existingApi.setDescription("Ma description");
+        final Proxy proxy = new Proxy();
         EndpointGroup endpointGroup = new EndpointGroup();
         Endpoint endpoint = new HttpEndpoint(null, null);
         endpointGroup.setEndpoints(singleton(endpoint));
-        when(proxy.getGroups()).thenReturn(singleton(endpointGroup));
-        when(existingApi.getProxy()).thenReturn(proxy);
-        when(proxy.getVirtualHosts()).thenReturn(Collections.singletonList(new VirtualHost("/context")));
-        when(existingApi.getLifecycleState()).thenReturn(CREATED);
+        proxy.setGroups(singleton(endpointGroup));
+        existingApi.setProxy(proxy);
+        proxy.setVirtualHosts(Collections.singletonList(new VirtualHost("/context")));
+        existingApi.setLifecycleState(CREATED);
 
         when(apiRepository.findById(API_ID)).thenReturn(Optional.of(api));
         when(api.getApiLifecycleState()).thenReturn(ApiLifecycleState.CREATED);
@@ -269,20 +274,20 @@ public class ApiService_UpdateTest {
         when(api.getName()).thenReturn(API_NAME);
         when(api.getApiLifecycleState()).thenReturn(ApiLifecycleState.CREATED);
 
-        when(existingApi.getName()).thenReturn(API_NAME);
-        when(existingApi.getVersion()).thenReturn("v1");
-        when(existingApi.getDescription()).thenReturn("Ma description");
-        final Proxy proxy = mock(Proxy.class);
+        existingApi.setName(API_NAME);
+        existingApi.setVersion("v1");
+        existingApi.setDescription("Ma description");
+        final Proxy proxy = new Proxy();
         EndpointGroup endpointGroup = new EndpointGroup();
         Endpoint endpoint = new HttpEndpoint(null, null);
         endpointGroup.setEndpoints(singleton(endpoint));
-        when(proxy.getGroups()).thenReturn(singleton(endpointGroup));
-        Cors cors = mock(Cors.class);
-        when(cors.getAccessControlAllowOrigin()).thenReturn(Sets.newSet("http://example.com", "localhost", "https://10.140.238.25:8080", "(http|https)://[a-z]{6}.domain.[a-zA-Z]{2,6}"));
-        when(proxy.getCors()).thenReturn(cors);
-        when(existingApi.getProxy()).thenReturn(proxy);
-        when(existingApi.getLifecycleState()).thenReturn(CREATED);
-        when(proxy.getVirtualHosts()).thenReturn(Collections.singletonList(new VirtualHost("/context")));
+        proxy.setGroups(singleton(endpointGroup));
+        Cors cors = new Cors();
+        cors.setAccessControlAllowOrigin(Sets.newSet("http://example.com", "localhost", "https://10.140.238.25:8080", "(http|https)://[a-z]{6}.domain.[a-zA-Z]{2,6}"));
+        proxy.setCors(cors);
+        existingApi.setProxy(proxy);
+        existingApi.setLifecycleState(CREATED);
+        proxy.setVirtualHosts(Collections.singletonList(new VirtualHost("/context")));
         
         RoleEntity poRoleEntity = new RoleEntity();
         poRoleEntity.setName(SystemRole.PRIMARY_OWNER.name());
@@ -344,7 +349,7 @@ public class ApiService_UpdateTest {
     @Test
     public void shouldUpdateWithExistingNotAllowedTag() throws TechnicalException {
         prepareUpdate();
-        when(existingApi.getTags()).thenReturn(newSet("public", "private"));
+        existingApi.setTags(newSet("public", "private"));
         when(api.getDefinition()).thenReturn("{\"id\": \"" + API_ID + "\",\"name\": \"" + API_NAME + "\",\"proxy\": {\"context_path\": \"/old\"} ,\"tags\": [\"public\", \"private\"]}");
         final ApiEntity apiEntity = apiService.update(API_ID, existingApi);
         assertNotNull(apiEntity);
