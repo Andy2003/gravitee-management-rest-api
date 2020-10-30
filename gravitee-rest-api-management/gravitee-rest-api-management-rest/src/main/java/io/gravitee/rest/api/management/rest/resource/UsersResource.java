@@ -46,65 +46,67 @@ import static io.gravitee.rest.api.model.permissions.RolePermissionAction.READ;
  * @author Nicolas GERAUD (nicolas.geraud at graviteesource.com)
  * @author GraviteeSource Team
  */
-@Api(tags = {"Users"})
+@Api(tags = { "Users" })
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
 public class UsersResource extends AbstractResource {
 
-    @Context
-    private ResourceContext resourceContext;
+	@Context
+	private ResourceContext resourceContext;
 
-    @Inject
-    private UserService userService;
+	@Inject
+	private UserService userService;
 
-    @Inject
-    private CustomUserFieldService customUserFieldService;
+	@Inject
+	private CustomUserFieldService customUserFieldService;
 
-    @GET
-    @Permissions(@Permission(value = RolePermission.ORGANIZATION_USERS, acls = READ))
-    @ApiOperation(
-            value = "Search for users using the search engine",
-            notes = "User must have the MANAGEMENT_USERS[READ] permission to use this service"
-    )
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "List users matching the query criteria", response = UserEntity.class, responseContainer = "PagedResult"),
-            @ApiResponse(code = 500, message = "Internal server error")})
-    public PagedResult<UserEntity> findAll(
-            @ApiParam(name = "q")
-            @QueryParam("q") String query,
-            @Valid @BeanParam Pageable pageable) {
-        Page<UserEntity> users = userService.search(query, pageable.toPageable());
-        return new PagedResult<>(users, pageable.getSize());
-    }
+	@GET
+	@Permissions(@Permission(value = RolePermission.ORGANIZATION_USERS, acls = READ))
+	@ApiOperation(
+			value = "Search for users using the search engine",
+			notes = "User must have the MANAGEMENT_USERS[READ] permission to use this service"
+	)
+	@ApiResponses({
+			@ApiResponse(code = 200, message = "List users matching the query criteria", response = UserEntity.class, responseContainer = "PagedResult"),
+			@ApiResponse(code = 500, message = "Internal server error") })
+	public PagedResult<UserEntity> getAllUsers(
+			@ApiParam(name = "q")
+			@QueryParam("q") String query,
+			@Valid @BeanParam Pageable pageable)
+	{
+		Page<UserEntity> users = userService.search(query, pageable.toPageable());
+		return new PagedResult<>(users, pageable.getSize());
+	}
 
-    @POST
-    @Permissions(@Permission(value = RolePermission.ORGANIZATION_USERS, acls = CREATE))
-    @ApiOperation(
-            value = "Create a user",
-            notes = "User must have the MANAGEMENT_USERS[CREATE] permission to use this service"
-    )
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "List users matching the query criteria", response = UserEntity.class),
-            @ApiResponse(code = 500, message = "Internal server error")})
-    public Response createUser(@Valid NewExternalUserEntity newExternalUserEntity) {
-        UserEntity newUser = userService.create(newExternalUserEntity);
-        if (newUser != null) {
-            return Response
-                    .ok()
-                    .entity(newUser)
-                    .build();
-        }
+	@POST
+	@Permissions(@Permission(value = RolePermission.ORGANIZATION_USERS, acls = CREATE))
+	@ApiOperation(
+			value = "Create a user",
+			notes = "User must have the MANAGEMENT_USERS[CREATE] permission to use this service"
+	)
+	@ApiResponses({
+			@ApiResponse(code = 200, message = "List users matching the query criteria", response = UserEntity.class),
+			@ApiResponse(code = 500, message = "Internal server error") })
+	public Response createUser(@Valid NewExternalUserEntity newExternalUserEntity) {
+		UserEntity newUser = userService.create(newExternalUserEntity);
+		if (newUser != null) {
+			return Response
+					.ok()
+					.entity(newUser)
+					.build();
+		}
 
-        return Response.serverError().build();
-    }
+		return Response.serverError().build();
+	}
 
-    @Path("{id}")
-    public UserResource getUserResource() {
-        return resourceContext.getResource(UserResource.class);
-    }
+	@Path("{userId}")
+	public UserResource getUserResource() {
+		return resourceContext.getResource(UserResource.class);
+	}
 
-    @Path("registration")
-    public UsersRegistrationResource getUsersRegistrationResource() {
-        return resourceContext.getResource(UsersRegistrationResource.class);
-    }
+	@Path("registration")
+	public UsersRegistrationResource getUsersRegistrationResource() {
+		return resourceContext.getResource(UsersRegistrationResource.class);
+	}
+
 }

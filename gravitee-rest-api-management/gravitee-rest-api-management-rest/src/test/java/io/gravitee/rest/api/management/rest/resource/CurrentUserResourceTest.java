@@ -22,6 +22,7 @@ import io.gravitee.rest.api.model.UserEntity;
 import java.util.Collections;
 import java.util.Date;
 import javax.ws.rs.core.Response;
+
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -64,18 +65,18 @@ public class CurrentUserResourceTest extends AbstractResourceTest {
     public void shouldBeAbleToGetCurrentUser() {
         Mockito.reset(userService);
 
-        final UserDetails userDetails = new UserDetails(USER_NAME, "PASSWORD", Collections.emptyList());
-        assertThat(userDetails.getPassword()).isNotNull();
+	    final UserDetails userDetails = new UserDetails(USER_NAME, "PASSWORD", Collections.emptyList());
+	    assertThat(userDetails.getPassword()).isNotNull();
 
-        setCurrentUserDetails(userDetails);
+	    setCurrentUserDetails(userDetails);
 
-        final Response response = target().request().get();
+	    final Response response = target().request().get();
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(HttpStatusCode.OK_200);
-        assertThat(response.readEntity(HashMap.class))
-                .isNotNull()
-                .containsKeys("created_at", "updated_at", "last_connection_at");
+	    assertThat(response).isNotNull();
+	    assertThat(response.getStatus()).isEqualTo(HttpStatusCode.OK_200);
+	    assertThat(response.readEntity(HashMap.class))
+			    .isNotNull()
+			    .containsKeys("created_at", "updated_at", "last_connection_at");
     }
 
     @Test
