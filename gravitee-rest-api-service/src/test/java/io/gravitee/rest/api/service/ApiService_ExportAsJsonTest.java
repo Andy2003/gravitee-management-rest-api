@@ -36,6 +36,7 @@ import io.gravitee.rest.api.model.permissions.SystemRole;
 import io.gravitee.rest.api.service.impl.ApiServiceImpl;
 import io.gravitee.rest.api.service.jackson.filter.ApiPermissionFilter;
 import io.gravitee.rest.api.service.jackson.ser.api.*;
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +45,8 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
@@ -51,6 +54,7 @@ import java.net.URL;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
@@ -446,7 +450,12 @@ public class ApiService_ExportAsJsonTest {
         String expectedJson = Resources.toString(url, Charsets.UTF_8);
 
         assertThat(jsonForExport).isNotNull();
-        assertThat(objectMapper.readTree(expectedJson)).isEqualTo(objectMapper.readTree(jsonForExport));
+
+	    try {
+		    JSONAssert.assertEquals(jsonForExport, expectedJson, JSONCompareMode.STRICT);
+	    } catch (JSONException e) {
+		    fail("", e);
+	    }
     }
 
     private void shouldConvertAsJsonWithoutMembers(ApiSerializer.Version version, String filename) throws IOException {

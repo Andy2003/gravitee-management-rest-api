@@ -263,7 +263,7 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
         }).collect(toMap(Path::getPath, path -> path));
 
         apiEntity.setPaths(paths);
-        apiEntity.setPathMappings(new HashSet<>(declaredPaths));
+        apiEntity.setPathMappings2(new HashSet<>(declaredPaths));
 
         if (swaggerApiEntity != null && swaggerDescriptor != null) {
             if (swaggerDescriptor.isWithPolicyPaths()) {
@@ -271,7 +271,7 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
             }
 
             if (swaggerDescriptor.isWithPathMapping()) {
-                apiEntity.setPathMappings(swaggerApiEntity.getPathMappings());
+                apiEntity.setPathMappings2(swaggerApiEntity.getPathMappings());
             }
         }
 
@@ -832,7 +832,7 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
             updateApiEntity.setPaths(swaggerApiEntity.getPaths());
 
             if (swaggerDescriptor.isWithPathMapping()) {
-                updateApiEntity.setPathMappings(swaggerApiEntity.getPathMappings());
+                updateApiEntity.setPathMappings2(swaggerApiEntity.getPathMappings());
             }
         }
 
@@ -1030,7 +1030,7 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
 
         // validate regex on pathMappings
         if (updateApiEntity.getPathMappings() != null) {
-            updateApiEntity.getPathMappings().forEach(pathMapping -> {
+            updateApiEntity.getPathMappings().keySet().forEach(pathMapping -> {
                 try {
                     Pattern.compile(pathMapping);
                 } catch (java.util.regex.PatternSyntaxException pse) {
@@ -2027,7 +2027,7 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
         updateApiEntity.setCategories(apiEntity.getCategories());
         updateApiEntity.setVisibility(apiEntity.getVisibility());
         updateApiEntity.setPaths(apiEntity.getPaths());
-        updateApiEntity.setPathMappings(apiEntity.getPathMappings());
+        updateApiEntity.setPathMappings2(apiEntity.getPathMappings());
         updateApiEntity.setDisableMembershipNotifications(apiEntity.isDisableMembershipNotifications());
         return updateApiEntity;
     }
@@ -2357,10 +2357,7 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
             apiDefinition.setProxy(updateApiEntity.getProxy());
 
             apiDefinition.setPaths(updateApiEntity.getPaths());
-            if (updateApiEntity.getPathMappings() != null) {
-                apiDefinition.setPathMappings(updateApiEntity.getPathMappings().stream()
-                    .collect(toMap(pathMapping -> pathMapping, pathMapping -> Pattern.compile(""))));
-            }
+            apiDefinition.setPathMappings(updateApiEntity.getPathMappings());
 
             apiDefinition.setServices(updateApiEntity.getServices());
             apiDefinition.setResources(updateApiEntity.getResources());

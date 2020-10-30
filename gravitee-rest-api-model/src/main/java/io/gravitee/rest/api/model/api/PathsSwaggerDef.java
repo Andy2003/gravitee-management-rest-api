@@ -28,5 +28,6 @@ import java.util.HashMap;
  * @author Eric LELEU (eric.leleu at graviteesource.com)
  * @author GraviteeSource Team
  */
+// TODO remove
 class PathsSwaggerDef extends HashMap<String, ArrayList<Rule>> {
 }
