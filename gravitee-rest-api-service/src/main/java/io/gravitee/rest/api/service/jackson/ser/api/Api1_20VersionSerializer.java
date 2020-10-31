@@ -46,9 +46,9 @@ public class Api1_20VersionSerializer extends ApiSerializer {
         super.serialize(apiEntity, jsonGenerator, serializerProvider);
 
         // path mappings part
-        if (apiEntity.getPathMappings() != null) {
+	    if (apiEntity.getPathMappings().keySet() != null) {
             jsonGenerator.writeArrayFieldStart("path_mappings");
-            apiEntity.getPathMappings().forEach(pathMapping -> {
+		    apiEntity.getPathMappings().keySet().forEach(pathMapping -> {
                 try {
                     jsonGenerator.writeObject(pathMapping);
                 } catch (IOException e) {

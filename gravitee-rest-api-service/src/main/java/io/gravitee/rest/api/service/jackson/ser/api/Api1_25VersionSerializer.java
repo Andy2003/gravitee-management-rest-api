@@ -23,7 +23,6 @@ import io.gravitee.rest.api.model.api.ApiEntity;
 import io.gravitee.rest.api.service.MembershipService;
 import io.gravitee.rest.api.service.PlanService;
 import io.gravitee.rest.api.service.UserService;
-import io.gravitee.rest.api.service.jackson.ser.api.ApiSerializer.Member;
 
 import java.io.IOException;
 import java.util.*;
@@ -45,9 +44,9 @@ public class Api1_25VersionSerializer extends ApiSerializer {
         super.serialize(apiEntity, jsonGenerator, serializerProvider);
 
         // path mappings part
-        if (apiEntity.getPathMappings() != null) {
+	    if (apiEntity.getPathMappings().keySet() != null) {
             jsonGenerator.writeArrayFieldStart("path_mappings");
-            apiEntity.getPathMappings().forEach(pathMapping -> {
+		    apiEntity.getPathMappings().keySet().forEach(pathMapping -> {
                 try {
                     jsonGenerator.writeObject(pathMapping);
                 } catch (IOException e) {

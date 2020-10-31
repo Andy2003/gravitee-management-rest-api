@@ -310,9 +310,7 @@ public class SyncManager {
                 apiEntity.setResources(apiDefinition.getResources());
                 apiEntity.setProperties(apiDefinition.getProperties());
                 apiEntity.setTags(apiDefinition.getTags());
-                if (apiDefinition.getPathMappings() != null) {
-                    apiEntity.setPathMappings(new HashSet<>(apiDefinition.getPathMappings().keySet()));
-                }
+                apiEntity.setPathMappings(apiDefinition.getPathMappings());
             } catch (IOException ioe) {
                 logger.error("Unexpected error while generating API definition", ioe);
             }

@@ -15,295 +15,249 @@
  */
 package io.gravitee.rest.api.model.api;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.gravitee.definition.model.Path;
-import io.gravitee.definition.model.Properties;
-import io.gravitee.definition.model.Proxy;
-import io.gravitee.definition.model.ResponseTemplates;
+import io.gravitee.definition.model.*;
 import io.gravitee.definition.model.plugins.resources.Resource;
 import io.gravitee.definition.model.services.Services;
 import io.gravitee.rest.api.model.ApiMetadataEntity;
 import io.gravitee.rest.api.model.Visibility;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import java.util.*;
+import static java.util.stream.Collectors.summarizingDouble;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * @author David BRASSELY (brasseld at gmail.com)
  */
-public class UpdateApiEntity {
+public class UpdateApiEntity extends Api {
 
-    @NotNull
-    @NotEmpty(message = "Api's name must not be empty")
-    @ApiModelProperty(
-            value = "Api's name. Duplicate names can exists.",
-            example = "My Api")
-    private String name;
+	private String description;
 
-    @NotNull
-    @ApiModelProperty(
-            value = "Api's version. It's a simple string only used in the portal.",
-            example = "v1.0")
-    private String version;
+	private Visibility visibility;
 
-    @NotNull
-    @ApiModelProperty(
-            value = "API's description. A short description of your API.",
-            example = "I can use a hundred characters to describe this API.")
-    private String description;
+	private String picture;
 
-    @NotNull
-    @JsonProperty(value = "proxy", required = true)
-    @ApiModelProperty(
-            value = "API's definition.")
-    private Proxy proxy;
+	private String pictureUrl;
 
-    @JsonProperty(value = "paths", required = true)
-    @ApiModelProperty(
-            // specify a type here because jackson der/ser for Path handle only array of rules
-            dataType = "io.gravitee.rest.api.model.api.PathsSwaggerDef",
-            value = "a map where you can associate a path to a configuration (the policies configuration)")
-    private Map<String, Path> paths = new HashMap<>();
+	private Set<String> categories;
 
-    @ApiModelProperty(
-            value = "The configuration of API services like the dynamic properties, the endpoint discovery or the healthcheck.")
-    private Services services;
+	private List<String> labels;
 
-    @ApiModelProperty(
-            value = "The list of API resources used by policies like cache resources or oauth2")
-    private List<Resource> resources = new ArrayList<>();
+	private Set<String> groups;
 
-    @JsonProperty(value = "properties")
-    @ApiModelProperty(
-            value = "A dictionary (could be dynamic) of properties available in the API context.")
-    private io.gravitee.definition.model.Properties properties;
+	private List<ApiMetadataEntity> metadata;
 
-    @NotNull
-    @ApiModelProperty(
-            value = "The visibility of the API regarding the portal.",
-            example = "PUBLIC",
-            allowableValues = "PUBLIC, PRIVATE")
-    private Visibility visibility;
+	private ApiLifecycleState lifecycleState;
 
-    @ApiModelProperty(
-            value = "the list of sharding tags associated with this API.",
-            example = "public, private")
-    private Set<String> tags;
+	private boolean disableMembershipNotifications;
 
-    @ApiModelProperty(
-            value = "the API logo encoded in base64")
-    private String picture;
+	private String background;
 
-    @JsonProperty("picture_url")
-    @ApiModelProperty(
-            value = "the API logo encoded in base64")
-    private String pictureUrl;
 
-    @ApiModelProperty(
-            value = "the list of categories associated with this API",
-            example = "Product, Customer, Misc")
-    private Set<String> categories;
+	@JsonCreator
+	public UpdateApiEntity(@JsonProperty(value = "proxy", required = true) Proxy proxy) {
+		super(proxy);
+	}
 
-    @ApiModelProperty(
-            value = "the free list of labels associated with this API",
-            example = "json, read_only, awesome")
-    private List<String> labels;
+	@NotNull
+	@NotEmpty(message = "Api's name must not be empty")
+	@ApiModelProperty(
+			value = "Api's name. Duplicate names can exists.",
+			example = "My Api")
+	public String getName() {
+		return super.getName();
+	}
 
-    @ApiModelProperty(
-            value = "API's groups. Used to add team in your API.",
-            example = "['MY_GROUP1', 'MY_GROUP2']")
-    private Set<String> groups;
+	@NotNull
+	@ApiModelProperty(
+			value = "The visibility of the API regarding the portal.",
+			example = "PUBLIC",
+			allowableValues = "PUBLIC, PRIVATE")
+	public Visibility getVisibility() {
+		return visibility;
+	}
 
-    @JsonProperty(value = "path_mappings")
-    @ApiModelProperty(
-            value = "A list of paths used to aggregate data in analytics",
-            example = "/products/:productId, /products/:productId/media")
-    private Set<String> pathMappings;
+	public void setVisibility(Visibility visibility) {
+		this.visibility = visibility;
+	}
 
-    @JsonProperty(value = "response_templates")
-    @ApiModelProperty(
-            value = "A map that allows you to configure the output of a request based on the event throws by the gateway. Example : Quota exceeded, api-ky is missing, ...")
-    private Map<String, ResponseTemplates> responseTemplates;
+	@NotNull
+	@ApiModelProperty(
+			value = "Api's version. It's a simple string only used in the portal.",
+			example = "v1.0")
+	public String getVersion() {
+		return super.getVersion();
+	}
 
-    private List<ApiMetadataEntity> metadata;
+	@NotNull
+	@ApiModelProperty(
+			value = "API's description. A short description of your API.",
+			example = "I can use a hundred characters to describe this API.")
+	public String getDescription() {
+		return description;
+	}
 
-    @JsonProperty(value = "lifecycle_state")
-    private ApiLifecycleState lifecycleState;
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-    @JsonProperty("disable_membership_notifications")
-    private boolean disableMembershipNotifications;
+	@NotNull
+	@ApiModelProperty(
+			value = "API's definition.",
+			required = true)
+	public Proxy getProxy() {
+		return super.getProxy();
+	}
 
-    @ApiModelProperty(
-            value = "the API background encoded in base64")
-    private String background;
+	@ApiModelProperty(
+			required = true,
+			value = "a map where you can associate a path to a configuration (the policies configuration)")
+	public Map<String, Path> getPaths() {
+		return super.getPaths();
+	}
 
-    public Visibility getVisibility() {
-        return visibility;
-    }
+	@ApiModelProperty(
+			value = "The configuration of API services like the dynamic properties, the endpoint discovery or the healthcheck.")
+	public Services getServices() {
+		return super.getServices();
+	}
 
-    public String getName() {
-        return name;
-    }
+	@ApiModelProperty(
+			value = "A dictionary (could be dynamic) of properties available in the API context.")
+	public Properties getProperties() {
+		return super.getProperties();
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	@ApiModelProperty(
+			value = "the list of sharding tags associated with this API.",
+			example = "public, private")
+	public Set<String> getTags() {
+		return super.getTags();
+	}
 
-    public void setVisibility(Visibility visibility) {
-        this.visibility = visibility;
-    }
+	@ApiModelProperty(
+			value = "the API logo encoded in base64")
+	public String getPicture() {
+		return picture;
+	}
 
-    public String getVersion() {
-        return version;
-    }
+	public void setPicture(String picture) {
+		this.picture = picture;
+	}
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
+	@ApiModelProperty(
+			value = "The list of API resources used by policies like cache resources or oauth2")
+	public List<Resource> getResources() {
+		return super.getResources();
+	}
 
-    public String getDescription() {
-        return description;
-    }
+	@ApiModelProperty(
+			value = "the list of categories associated with this API",
+			example = "Product, Customer, Misc")
+	public Set<String> getCategories() {
+		return categories;
+	}
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	public void setCategories(Set<String> categories) {
+		this.categories = categories;
+	}
 
-    public Proxy getProxy() {
-        return proxy;
-    }
+	@ApiModelProperty(
+			value = "the free list of labels associated with this API",
+			example = "json, read_only, awesome")
+	public List<String> getLabels() {
+		return labels;
+	}
 
-    public void setProxy(Proxy proxy) {
-        this.proxy = proxy;
-    }
+	public void setLabels(List<String> labels) {
+		this.labels = labels;
+	}
 
-    public Map<String, Path> getPaths() {
-        return paths;
-    }
+	@ApiModelProperty(
+			value = "API's groups. Used to add team in your API.",
+			example = "['MY_GROUP1', 'MY_GROUP2']")
+	public Set<String> getGroups() {
+		return groups;
+	}
 
-    public void setPaths(Map<String, Path> paths) {
-        this.paths = paths;
-    }
+	public void setGroups(Set<String> groups) {
+		this.groups = groups;
+	}
 
-    public Services getServices() {
-        return services;
-    }
+	@Override
+	@ApiModelProperty(
+			value = "A list of paths used to aggregate data in analytics",
+			example = "/products/:productId, /products/:productId/media")
+	public Map<String, Pattern> getPathMappings() {
+		return super.getPathMappings();
+	}
 
-    public void setServices(Services services) {
-        this.services = services;
-    }
+	@JsonIgnore
+	@Deprecated // TODO remove
+	public void setPathMappings2(Set<String> pathMappings2) {
+		setPathMappings(pathMappings2.stream()
+				.collect(toMap(pathMapping -> pathMapping, pathMapping -> Pattern.compile(""))));
+	}
 
-    public Properties getProperties() {
-        return properties;
-    }
+	@ApiModelProperty(
+			value = "A map that allows you to configure the output of a request based on the event throws by the gateway. Example : Quota exceeded, api-ky is missing, ...")
+	public Map<String, ResponseTemplates> getResponseTemplates() {
+		return super.getResponseTemplates();
+	}
 
-    public void setProperties(Properties properties) {
-        this.properties = properties;
-    }
+	public List<ApiMetadataEntity> getMetadata() {
+		return metadata;
+	}
 
-    public Set<String> getTags() {
-        return tags;
-    }
+	public void setMetadata(List<ApiMetadataEntity> metadata) {
+		this.metadata = metadata;
+	}
 
-    public void setTags(Set<String> tags) {
-        this.tags = tags;
-    }
+	@JsonProperty(value = "lifecycle_state")
+	public ApiLifecycleState getLifecycleState() {
+		return lifecycleState;
+	}
 
-    public String getPicture() {
-        return picture;
-    }
+	public void setLifecycleState(ApiLifecycleState lifecycleState) {
+		this.lifecycleState = lifecycleState;
+	}
 
-    public void setPicture(String picture) {
-        this.picture = picture;
-    }
+	@JsonProperty("disable_membership_notifications")
+	public boolean isDisableMembershipNotifications() {
+		return disableMembershipNotifications;
+	}
 
-    public List<Resource> getResources() {
-        return resources;
-    }
+	public void setDisableMembershipNotifications(boolean disableMembershipNotifications) {
+		this.disableMembershipNotifications = disableMembershipNotifications;
+	}
 
-    public void setResources(List<Resource> resources) {
-        this.resources = resources;
-    }
+	@ApiModelProperty(
+			value = "the API background encoded in base64")
+	public String getBackground() {
+		return background;
+	}
 
-    public Set<String> getCategories() {
-        return categories;
-    }
+	public void setBackground(String background) {
+		this.background = background;
+	}
 
-    public void setCategories(Set<String> categories) {
-        this.categories = categories;
-    }
+	@JsonProperty("picture_url")
+	@ApiModelProperty(
+			value = "the API logo encoded in base64")
+	public String getPictureUrl() {
+		return pictureUrl;
+	}
 
-    public List<String> getLabels() {
-        return labels;
-    }
-
-    public void setLabels(List<String> labels) {
-        this.labels = labels;
-    }
-
-    public Set<String> getGroups() {
-        return groups;
-    }
-
-    public void setGroups(Set<String> groups) {
-        this.groups = groups;
-    }
-
-    public Set<String> getPathMappings() {
-        return pathMappings;
-    }
-
-    public void setPathMappings(Set<String> pathMappings) {
-        this.pathMappings = pathMappings;
-    }
-
-    public Map<String, ResponseTemplates> getResponseTemplates() {
-        return responseTemplates;
-    }
-
-    public void setResponseTemplates(Map<String, ResponseTemplates> responseTemplates) {
-        this.responseTemplates = responseTemplates;
-    }
-
-    public List<ApiMetadataEntity> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(List<ApiMetadataEntity> metadata) {
-        this.metadata = metadata;
-    }
-
-    public ApiLifecycleState getLifecycleState() {
-        return lifecycleState;
-    }
-
-    public void setLifecycleState(ApiLifecycleState lifecycleState) {
-        this.lifecycleState = lifecycleState;
-    }
-
-    public boolean isDisableMembershipNotifications() {
-        return disableMembershipNotifications;
-    }
-
-    public void setDisableMembershipNotifications(boolean disableMembershipNotifications) {
-        this.disableMembershipNotifications = disableMembershipNotifications;
-    }
-
-    public String getBackground() {
-        return background;
-    }
-
-    public void setBackground(String background) {
-        this.background = background;
-    }
-
-    public String getPictureUrl() {
-        return pictureUrl;
-    }
-
-    public void setPictureUrl(String pictureUrl) {
-        this.pictureUrl = pictureUrl;
-    }
+	public void setPictureUrl(String pictureUrl) {
+		this.pictureUrl = pictureUrl;
+	}
 }

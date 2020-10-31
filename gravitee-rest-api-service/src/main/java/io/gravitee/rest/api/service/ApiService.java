@@ -108,7 +108,7 @@ public interface ApiService {
         updateApiEntity.setServices(apiEntity.getServices());
         updateApiEntity.setVisibility(apiEntity.getVisibility());
         updateApiEntity.setLabels(apiEntity.getLabels());
-        updateApiEntity.setPathMappings(apiEntity.getPathMappings());
+	    updateApiEntity.setPathMappings2(apiEntity.getPathMappings().keySet());
         updateApiEntity.setLifecycleState(apiEntity.getLifecycleState());
 
         return updateApiEntity;

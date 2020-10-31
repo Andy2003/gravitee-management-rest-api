@@ -15,14 +15,13 @@
  */
 package io.gravitee.rest.api.model.api;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.gravitee.common.component.Lifecycle;
-import io.gravitee.definition.model.Path;
+import io.gravitee.definition.model.*;
 import io.gravitee.definition.model.Properties;
-import io.gravitee.definition.model.Proxy;
-import io.gravitee.definition.model.ResponseTemplates;
 import io.gravitee.definition.model.plugins.resources.Resource;
 import io.gravitee.definition.model.services.Services;
 import io.gravitee.rest.api.model.*;
@@ -32,6 +31,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * --------------------------------------------------------------------------------------------------------------
@@ -47,177 +47,69 @@ import java.util.*;
  * @author GraviteeSource Team
  */
 @JsonFilter("apiMembershipTypeFilter")
-public class ApiEntity implements Indexable, FilterableItem {
-    @ApiModelProperty(
-            value = "API's uuid.",
-            example = "00f8c9e7-78fc-4907-b8c9-e778fc790750")
-    private String id;
+public class ApiEntity extends Api implements Indexable, FilterableItem {
 
-    @ApiModelProperty(
-            value = "API's name. Duplicate names can exists.",
-            example = "My Api")
-    private String name;
-
-    @ApiModelProperty(
-            value = "Api's version. It's a simple string only used in the portal.",
-            example = "v1.0")
-    private String version;
-
-    @ApiModelProperty(
-            value = "API's description. A short description of your API.",
-            example = "I can use a hundred characters to describe this API.")
     private String description;
 
-    @ApiModelProperty(
-            value = "API's groups. Used to add team in your API.",
-            example = "['MY_GROUP1', 'MY_GROUP2']")
     private Set<String> groups;
 
-    @JsonProperty(value = "context_path")
-    @ApiModelProperty(
-            value = "API's context path.",
-            example = "/my-awesome-api")
     private String contextPath;
 
-    @NotNull
-    @DeploymentRequired
-    @JsonProperty(value = "proxy", required = true)
-    @ApiModelProperty(
-            value = "API's definition.")
-    private Proxy proxy;
-
-    @DeploymentRequired
-    @JsonProperty(value = "paths", required = true)
-    @ApiModelProperty(
-            // specify a type here because jackson der/ser for Path handle only array of rules
-            dataType = "io.gravitee.rest.api.model.api.PathsSwaggerDef",
-            value = "a map where you can associate a path to a configuration (the policies configuration)")
-    private Map<String, Path> paths = new HashMap<>();
-
-    @JsonProperty("deployed_at")
-    @ApiModelProperty(
-            value = "The last date (as timestamp) when the API was deployed.",
-            example = "1581256457163")
     private Date deployedAt;
 
-    @JsonProperty("created_at")
-    @ApiModelProperty(
-            value = "The date (as a timestamp) when the API was created.",
-            example = "1581256457163")
     private Date createdAt;
 
-    @JsonProperty("updated_at")
-    @ApiModelProperty(
-            value = "The last date (as a timestamp) when the API was updated.",
-            example = "1581256457163")
     private Date updatedAt;
 
-    @ApiModelProperty(
-            value = "The visibility of the API regarding the portal.",
-            example = "PUBLIC",
-            allowableValues = "PUBLIC, PRIVATE")
     private Visibility visibility;
 
-    @ApiModelProperty(
-            value = "The status of the API regarding the gateway.",
-            example = "STARTED",
-            allowableValues = "INITIALIZED, STOPPED, STARTED, CLOSED")
     private Lifecycle.State state;
 
-    @JsonProperty("owner")
-    @ApiModelProperty(
-            value = "The user with role PRIMARY_OWNER on this API.")
     private PrimaryOwnerEntity primaryOwner;
 
-    @DeploymentRequired
-    @JsonProperty(value = "properties")
-    @ApiModelProperty(
-            value = "A dictionary (could be dynamic) of properties available in the API context.")
-    private io.gravitee.definition.model.Properties properties;
-
-    @DeploymentRequired
-    @JsonProperty(value = "services")
-    @ApiModelProperty(
-            value = "The configuration of API services like the dynamic properties, the endpoint discovery or the healthcheck.")
-    private Services services;
-
-    @DeploymentRequired
-    @ApiModelProperty(
-            value = "the list of sharding tags associated with this API.",
-            example = "public, private")
-    private Set<String> tags;
-
-    @ApiModelProperty(
-            value = "the API logo encoded in base64")
     private String picture;
 
-    @JsonProperty(value = "picture_url")
-    @ApiModelProperty(
-            value = "the API logo url.",
-            example = "https://gravitee.mycompany.com/management/apis/6c530064-0b2c-4004-9300-640b2ce0047b/picture")
     private String pictureUrl;
 
-    @DeploymentRequired
-    @JsonProperty(value = "resources")
-    @ApiModelProperty(
-            value = "The list of API resources used by policies like cache resources or oauth2")
-    private List<Resource> resources = new ArrayList<>();
-
-    @ApiModelProperty(
-            value = "the list of categories associated with this API",
-            example = "Product, Customer, Misc")
     private Set<String> categories;
 
-    @ApiModelProperty(
-            value = "the free list of labels associated with this API",
-            example = "json, read_only, awesome")
     private List<String> labels;
 
-    @DeploymentRequired
-    @JsonProperty(value = "path_mappings")
-    @ApiModelProperty(
-            value = "A list of paths used to aggregate data in analytics",
-            example = "/products/:productId, /products/:productId/media")
-    private Set<String> pathMappings = new HashSet<>();
-
-    @JsonIgnore
     private Map<String, Object> metadata = new HashMap<>();
 
-    @DeploymentRequired
-    @JsonProperty(value = "response_templates")
-    @ApiModelProperty(
-            value = "A map that allows you to configure the output of a request based on the event throws by the gateway. Example : Quota exceeded, api-ky is missing, ...")
-    private Map<String, ResponseTemplates> responseTemplates;
-
-    @JsonProperty(value = "lifecycle_state")
     private ApiLifecycleState lifecycleState;
 
-    @JsonProperty(value = "workflow_state")
     private WorkflowState workflowState;
 
-    @JsonProperty("disable_membership_notifications")
     private boolean disableMembershipNotifications;
 
     private List<ApiEntrypointEntity> entrypoints;
 
-    @ApiModelProperty(
-            value = "the API background encoded in base64")
     private String background;
 
-    @JsonProperty(value = "background_url")
-    @ApiModelProperty(
-            value = "the API background url.",
-            example = "https://gravitee.mycompany.com/management/apis/6c530064-0b2c-4004-9300-640b2ce0047b/background")
-    private String backgroundUrl;
+   private String backgroundUrl;
 
+	public ApiEntity() {
+		super(null);
+	}
+
+	@JsonCreator
+	public ApiEntity(@JsonProperty(value = "proxy", required = true) Proxy proxy) {
+		super(proxy);
+	}
+
+	@ApiModelProperty(
+			value = "API's uuid.",
+			example = "00f8c9e7-78fc-4907-b8c9-e778fc790750")
+	@Override
     public String getId() {
-        return id;
+        return super.getId();
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
+	@JsonProperty("created_at")
+	@ApiModelProperty(
+			value = "The date (as a timestamp) when the API was created.",
+			example = "1581256457163")
     public Date getCreatedAt() {
         return createdAt;
     }
@@ -226,15 +118,19 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.createdAt = createdAt;
     }
 
-    public String getName() {
-        return name;
-    }
+	@ApiModelProperty(
+			value = "API's name. Duplicate names can exists.",
+			example = "My Api")
+	@Override
+	public String getName() {
+		return super.getName();
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Visibility getVisibility() {
+	@ApiModelProperty(
+			value = "The visibility of the API regarding the portal.",
+			example = "PUBLIC",
+			allowableValues = "PUBLIC, PRIVATE")
+	public Visibility getVisibility() {
         return visibility;
     }
 
@@ -242,6 +138,10 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.visibility = visibility;
     }
 
+	@JsonProperty("updated_at")
+	@ApiModelProperty(
+			value = "The last date (as a timestamp) when the API was updated.",
+			example = "1581256457163")
     public Date getUpdatedAt() {
         return updatedAt;
     }
@@ -250,14 +150,17 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.updatedAt = updatedAt;
     }
 
+	@Override
+	@ApiModelProperty(
+			value = "Api's version. It's a simple string only used in the portal.",
+			example = "v1.0")
     public String getVersion() {
-        return version;
+        return super.getVersion();
     }
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
+	@ApiModelProperty(
+			value = "API's description. A short description of your API.",
+			example = "I can use a hundred characters to describe this API.")
     public String getDescription() {
         return description;
     }
@@ -266,6 +169,10 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.description = description;
     }
 
+	@ApiModelProperty(
+			value = "The status of the API regarding the gateway.",
+			example = "STARTED",
+			allowableValues = "INITIALIZED, STOPPED, STARTED, CLOSED")
     public Lifecycle.State getState() {
         return state;
     }
@@ -274,22 +181,29 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.state = state;
     }
 
+	@NotNull
+	@DeploymentRequired
+	@ApiModelProperty(
+			value = "API's definition.")
+    @Override
     public Proxy getProxy() {
-        return proxy;
+        return super.getProxy();
     }
 
-    public void setProxy(Proxy proxy) {
-        this.proxy = proxy;
-    }
-
+	@DeploymentRequired
+	@JsonProperty(value = "paths", required = true)
+	@ApiModelProperty(
+			// specify a type here because jackson der/ser for Path handle only array of rules
+			dataType = "io.gravitee.rest.api.model.api.PathsSwaggerDef",
+			value = "a map where you can associate a path to a configuration (the policies configuration)")
+    @Override
     public Map<String, Path> getPaths() {
-        return paths;
+        return super.getPaths();
     }
 
-    public void setPaths(Map<String, Path> paths) {
-        this.paths = paths;
-    }
-
+	@JsonProperty("owner")
+	@ApiModelProperty(
+			value = "The user with role PRIMARY_OWNER on this API.")
     public PrimaryOwnerEntity getPrimaryOwner() {
         return primaryOwner;
     }
@@ -298,30 +212,37 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.primaryOwner = primaryOwner;
     }
 
+	@DeploymentRequired
+	@JsonProperty(value = "services")
+	@ApiModelProperty(
+			value = "The configuration of API services like the dynamic properties, the endpoint discovery or the healthcheck.")
+	@Override
     public Services getServices() {
-        return services;
+        return super.getServices();
     }
 
-    public void setServices(Services services) {
-        this.services = services;
-    }
-
+	@DeploymentRequired
+	@JsonProperty(value = "properties")
+	@ApiModelProperty(
+			value = "A dictionary (could be dynamic) of properties available in the API context.")
+    @Override
     public Properties getProperties() {
-        return properties;
+        return super.getProperties();
     }
 
-    public void setProperties(Properties properties) {
-        this.properties = properties;
-    }
-
+	@DeploymentRequired
+	@ApiModelProperty(
+			value = "the list of sharding tags associated with this API.",
+			example = "public, private")
+    @Override
     public Set<String> getTags() {
-        return tags;
+        return super.getTags();
     }
 
-    public void setTags(Set<String> tags) {
-        this.tags = tags;
-    }
-
+	@JsonProperty("deployed_at")
+	@ApiModelProperty(
+			value = "The last date (as timestamp) when the API was deployed.",
+			example = "1581256457163")
     public Date getDeployedAt() {
         return deployedAt;
     }
@@ -330,6 +251,8 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.deployedAt = deployedAt;
     }
 
+	@ApiModelProperty(
+			value = "the API logo encoded in base64")
     public String getPicture() {
         return picture;
     }
@@ -338,6 +261,10 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.picture = picture;
     }
 
+	@JsonProperty(value = "picture_url")
+	@ApiModelProperty(
+			value = "the API logo url.",
+			example = "https://gravitee.mycompany.com/management/apis/6c530064-0b2c-4004-9300-640b2ce0047b/picture")
     public String getPictureUrl() {
         return pictureUrl;
     }
@@ -346,14 +273,18 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.pictureUrl = pictureUrl;
     }
 
+	@DeploymentRequired
+	@ApiModelProperty(
+			value = "The list of API resources used by policies like cache resources or oauth2")
+    @Override
     public List<Resource> getResources() {
-        return resources;
+        return super.getResources();
     }
 
-    public void setResources(List<Resource> resources) {
-        this.resources = resources;
-    }
 
+	@ApiModelProperty(
+			value = "the list of categories associated with this API",
+			example = "Product, Customer, Misc")
     public Set<String> getCategories() {
         return categories;
     }
@@ -362,6 +293,9 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.categories = categories;
     }
 
+	@ApiModelProperty(
+			value = "API's groups. Used to add team in your API.",
+			example = "['MY_GROUP1', 'MY_GROUP2']")
     public Set<String> getGroups() {
         return groups;
     }
@@ -370,6 +304,9 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.groups = groups;
     }
 
+	@ApiModelProperty(
+			value = "the free list of labels associated with this API",
+			example = "json, read_only, awesome")
     public List<String> getLabels() {
         return labels;
     }
@@ -378,15 +315,17 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.labels = labels;
     }
 
-    public Set<String> getPathMappings() {
-        return pathMappings;
+	@DeploymentRequired
+	@ApiModelProperty(
+			value = "A list of paths used to aggregate data in analytics",
+			example = "/products/:productId, /products/:productId/media")
+	@Override
+	public Map<String, Pattern> getPathMappings() {
+        return super.getPathMappings();
     }
 
-    public void setPathMappings(Set<String> pathMappings) {
-        this.pathMappings = pathMappings;
-    }
-
-    public Map<String, Object> getMetadata() {
+	@JsonIgnore
+	public Map<String, Object> getMetadata() {
         return metadata;
     }
 
@@ -394,14 +333,15 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.metadata = metadata;
     }
 
+	@DeploymentRequired
+	@ApiModelProperty(
+			value = "A map that allows you to configure the output of a request based on the event throws by the gateway. Example : Quota exceeded, api-ky is missing, ...")
+	@Override
     public Map<String, ResponseTemplates> getResponseTemplates() {
-        return responseTemplates;
+        return super.getResponseTemplates();
     }
 
-    public void setResponseTemplates(Map<String, ResponseTemplates> responseTemplates) {
-        this.responseTemplates = responseTemplates;
-    }
-
+	@JsonProperty(value = "lifecycle_state")
     public ApiLifecycleState getLifecycleState() {
         return lifecycleState;
     }
@@ -410,7 +350,8 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.lifecycleState = lifecycleState;
     }
 
-    public WorkflowState getWorkflowState() {
+	@JsonProperty(value = "workflow_state")
+	public WorkflowState getWorkflowState() {
         return workflowState;
     }
 
@@ -426,6 +367,10 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.entrypoints = entrypoints;
     }
 
+	@JsonProperty(value = "context_path")
+	@ApiModelProperty(
+			value = "API's context path.",
+			example = "/my-awesome-api")
     public String getContextPath() {
         return contextPath;
     }
@@ -434,7 +379,8 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.contextPath = contextPath;
     }
 
-    public boolean isDisableMembershipNotifications() {
+	@JsonProperty("disable_membership_notifications")
+	public boolean isDisableMembershipNotifications() {
         return disableMembershipNotifications;
     }
 
@@ -442,6 +388,8 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.disableMembershipNotifications = disableMembershipNotifications;
     }
 
+	@ApiModelProperty(
+			value = "the API background encoded in base64")
     public String getBackground() {
         return background;
     }
@@ -450,7 +398,12 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.background = background;
     }
 
-    public String getBackgroundUrl() {
+	@JsonProperty(value = "background_url")
+	@ApiModelProperty(
+			value = "the API background url.",
+			example = "https://gravitee.mycompany.com/management/apis/6c530064-0b2c-4004-9300-640b2ce0047b/background")
+
+	public String getBackgroundUrl() {
         return backgroundUrl;
     }
 
@@ -463,32 +416,32 @@ public class ApiEntity implements Indexable, FilterableItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ApiEntity api = (ApiEntity) o;
-        return Objects.equals(id, api.id) &&
-                Objects.equals(version, api.version);
+        return Objects.equals(getId(), api.getId()) &&
+                Objects.equals(getVersion(), api.getVersion());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, version);
+        return Objects.hash(getId(), getVersion());
     }
 
     public String toString() {
-        return "ApiEntity{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", version='" + version + '\'' +
+	    return "ApiEntity{" +
+                "id='" + getId() + '\'' +
+                ", name='" + getName() + '\'' +
+                ", version='" + getVersion() + '\'' +
                 ", description='" + description + '\'' +
-                ", proxy=" + proxy +
-                ", paths=" + paths +
+                ", proxy=" + getProxy() +
+                ", paths=" + getPaths() +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 ", visibility=" + visibility +
                 ", state=" + state +
                 ", primaryOwner=" + primaryOwner +
-                ", tags=" + tags +
+                ", tags=" + getTags() +
                 ", category=" + categories +
                 ", groups=" + groups +
-                ", pathMappings=" + pathMappings +
+                ", pathMappings=" + getPathMappings().keySet() +
                 ", lifecycleState=" + lifecycleState +
                 ", workflowState=" + workflowState +
                 ", disableMembershipNotifications=" + disableMembershipNotifications +
