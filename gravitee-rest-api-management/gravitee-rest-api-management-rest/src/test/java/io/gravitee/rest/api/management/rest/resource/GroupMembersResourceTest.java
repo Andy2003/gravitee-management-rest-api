@@ -84,10 +84,10 @@ public class GroupMembersResourceTest extends AbstractResourceTest {
     public void shouldAddMemberWithCustomApplicationRoleAndCustomApiRole() {
         initADDmock();
         MemberRoleEntity apiRole = new MemberRoleEntity();
-        apiRole.setRoleScope(io.gravitee.rest.api.model.permissions.RoleScope.API);
+        apiRole.setRoleScope(RoleScope.API);
         apiRole.setRoleName("CUSTOM_API");
         MemberRoleEntity appRole = new MemberRoleEntity();
-        appRole.setRoleScope(io.gravitee.rest.api.model.permissions.RoleScope.APPLICATION);
+        appRole.setRoleScope(RoleScope.APPLICATION);
         appRole.setRoleName("CUSTOM_APP");
 
         GroupMembership groupMembership = new GroupMembership();
@@ -96,7 +96,7 @@ public class GroupMembersResourceTest extends AbstractResourceTest {
 
         final Response response = envTarget().request().post(Entity.json(Collections.singleton(groupMembership)));
 
-        assertEquals(HttpStatusCode.OK_200, response.getStatus());
+        assertEquals(HttpStatusCode.NO_CONTENT_204, response.getStatus());
         verify(roleService, never()).findDefaultRoleByScopes(RoleScope.API);
         verify(roleService, never()).findDefaultRoleByScopes(RoleScope.APPLICATION);
         verify(membershipService, times(1)).addRoleToMemberOnReference(
@@ -138,7 +138,7 @@ public class GroupMembersResourceTest extends AbstractResourceTest {
 
         final Response response = envTarget().request().post(Entity.json(Collections.singleton(groupMembership)));
 
-        assertEquals(HttpStatusCode.OK_200, response.getStatus());
+        assertEquals(HttpStatusCode.NO_CONTENT_204, response.getStatus());
         verify(roleService, never()).findDefaultRoleByScopes(RoleScope.API);
         verify(roleService, never()).findDefaultRoleByScopes(RoleScope.APPLICATION);
         verify(membershipService, never()).addRoleToMemberOnReference(any(), any(), any());
@@ -149,7 +149,7 @@ public class GroupMembersResourceTest extends AbstractResourceTest {
         initUPDATEmock();
 
         MemberRoleEntity apiRole = new MemberRoleEntity();
-        apiRole.setRoleScope(io.gravitee.rest.api.model.permissions.RoleScope.API);
+        apiRole.setRoleScope(RoleScope.API);
         apiRole.setRoleName("CUSTOM_API");
 
         GroupMembership groupMembership = new GroupMembership();
@@ -158,7 +158,7 @@ public class GroupMembersResourceTest extends AbstractResourceTest {
 
         final Response response = envTarget().request().post(Entity.json(Collections.singleton(groupMembership)));
 
-        assertEquals(HttpStatusCode.OK_200, response.getStatus());
+        assertEquals(HttpStatusCode.NO_CONTENT_204, response.getStatus());
         verify(roleService, never()).findDefaultRoleByScopes(RoleScope.API);
         verify(roleService, never()).findDefaultRoleByScopes(RoleScope.APPLICATION);
         verify(membershipService, times(1)).addRoleToMemberOnReference(any(), any(), any());
@@ -173,7 +173,7 @@ public class GroupMembersResourceTest extends AbstractResourceTest {
         initUPDATEmock();
 
         MemberRoleEntity appRole = new MemberRoleEntity();
-        appRole.setRoleScope(io.gravitee.rest.api.model.permissions.RoleScope.APPLICATION);
+        appRole.setRoleScope(RoleScope.APPLICATION);
         appRole.setRoleName("CUSTOM_APP");
 
         GroupMembership groupMembership = new GroupMembership();
@@ -182,7 +182,7 @@ public class GroupMembersResourceTest extends AbstractResourceTest {
 
         final Response response = envTarget().request().post(Entity.json(Collections.singleton(groupMembership)));
 
-        assertEquals(HttpStatusCode.OK_200, response.getStatus());
+        assertEquals(HttpStatusCode.NO_CONTENT_204, response.getStatus());
         verify(roleService, never()).findDefaultRoleByScopes(RoleScope.API);
         verify(roleService, never()).findDefaultRoleByScopes(RoleScope.APPLICATION);
         verify(membershipService, times(1)).addRoleToMemberOnReference(any(), any(), any());
@@ -196,10 +196,10 @@ public class GroupMembersResourceTest extends AbstractResourceTest {
     public void shouldUpdateApiAndApplicationRole() {
         initUPDATEmock();
         MemberRoleEntity apiRole = new MemberRoleEntity();
-        apiRole.setRoleScope(io.gravitee.rest.api.model.permissions.RoleScope.API);
+        apiRole.setRoleScope(RoleScope.API);
         apiRole.setRoleName("CUSTOM_API");
         MemberRoleEntity appRole = new MemberRoleEntity();
-        appRole.setRoleScope(io.gravitee.rest.api.model.permissions.RoleScope.APPLICATION);
+        appRole.setRoleScope(RoleScope.APPLICATION);
         appRole.setRoleName("CUSTOM_APP");
 
         GroupMembership groupMembership = new GroupMembership();
@@ -208,7 +208,7 @@ public class GroupMembersResourceTest extends AbstractResourceTest {
 
         final Response response = envTarget().request().post(Entity.json(Collections.singleton(groupMembership)));
 
-        assertEquals(HttpStatusCode.OK_200, response.getStatus());
+        assertEquals(HttpStatusCode.NO_CONTENT_204, response.getStatus());
         verify(roleService, never()).findDefaultRoleByScopes(RoleScope.API);
         verify(roleService, never()).findDefaultRoleByScopes(RoleScope.APPLICATION);
         verify(membershipService, times(1)).addRoleToMemberOnReference(

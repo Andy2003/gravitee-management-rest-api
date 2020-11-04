@@ -33,7 +33,13 @@ import io.gravitee.rest.api.model.permissions.RolePermission;
 import io.gravitee.rest.api.model.permissions.RolePermissionAction;
 import io.gravitee.rest.api.model.subscription.SubscriptionQuery;
 import io.gravitee.rest.api.service.*;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -49,7 +55,7 @@ import java.util.stream.Collectors;
  * @author Nicolas GERAUD (nicolas.geraud at graviteesource.com)
  * @author GraviteeSource Team
  */
-@Api(tags = {"Application Subscriptions"})
+@Tag(name = "Application Subscriptions")
 public class ApplicationSubscriptionsResource {
 
     @Inject
@@ -69,21 +75,20 @@ public class ApplicationSubscriptionsResource {
 
     @SuppressWarnings("UnresolvedRestParam")
     @PathParam("application")
-    @ApiParam(name = "application", hidden = true)
+    @Parameter(name = "application", hidden = true)
     private String application;
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Subscribe to a plan",
-            notes = "User must have the MANAGE_SUBSCRIPTIONS permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 201, message = "Subscription successfully created", response = Subscription.class),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Subscribe to a plan", description = "User must have the MANAGE_SUBSCRIPTIONS permission to use this service")
+    @ApiResponse(responseCode = "201", description = "Subscription successfully created",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Subscription.class)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = RolePermission.APPLICATION_SUBSCRIPTION, acls = RolePermissionAction.CREATE)
     })
     public Response createSubscriptionWithApplication(
-            @ApiParam(name = "plan", required = true)
+            @Parameter(name = "plan", required = true)
             @NotNull @QueryParam("plan") String plan,
             NewSubscriptionEntity newSubscriptionEntity) {
         // If no request message has been passed, the entity is not created
@@ -111,18 +116,18 @@ public class ApplicationSubscriptionsResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "List subscriptions for the application",
-            notes = "User must have the READ_SUBSCRIPTION permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "Paged result of application's subscriptions", response = PagedResult.class),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "List subscriptions for the application", description = "User must have the READ_SUBSCRIPTION permission to use this service")
+    @ApiResponse(responseCode = "200", description = "Paged result of application's subscriptions",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PagedResult.class)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = RolePermission.APPLICATION_SUBSCRIPTION, acls = RolePermissionAction.READ)
     })
     public PagedResult<SubscriptionEntity> getApplicationSubscriptions(
             @BeanParam SubscriptionParam subscriptionParam,
             @Valid @BeanParam Pageable pageable,
-            @ApiParam(allowableValues = "keys", value = "Expansion of data to return in subscriptions") @QueryParam("expand") List<String> expand) {
+            @Parameter(description = "Expansion of data to return in subscriptions", schema = @Schema(allowableValues = "keys"))
+            @QueryParam("expand") List<String> expand) {
         // Transform query parameters to a subscription query
         SubscriptionQuery subscriptionQuery = subscriptionParam.toQuery();
         subscriptionQuery.setApplication(application);
@@ -155,11 +160,10 @@ public class ApplicationSubscriptionsResource {
     @GET
     @Path("{subscription}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Get subscription information",
-            notes = "User must have the READ permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "Subscription information", response = Subscription.class),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Get subscription information", description = "User must have the READ permission to use this service")
+    @ApiResponse(responseCode = "200", description = "Subscription information",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Subscription.class)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = RolePermission.APPLICATION_SUBSCRIPTION, acls = RolePermissionAction.READ)
     })
@@ -171,11 +175,10 @@ public class ApplicationSubscriptionsResource {
     @DELETE
     @Path("{subscription}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Close the subscription",
-            notes = "User must have the APPLICATION_SUBSCRIPTION[DELETE] permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "Subscription has been closed successfully", response = Subscription.class),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Close the subscription", description = "User must have the APPLICATION_SUBSCRIPTION[DELETE] permission to use this service")
+    @ApiResponse(responseCode = "200", description = "Subscription has been closed successfully",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Subscription.class)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = RolePermission.APPLICATION_SUBSCRIPTION, acls = RolePermissionAction.DELETE)
     })
@@ -194,12 +197,10 @@ public class ApplicationSubscriptionsResource {
     @GET
     @Path("{subscription}/keys")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "List all API Keys for a subscription",
-            notes = "User must have the READ permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "List of API Keys for a subscription", response = ApiKeyEntity.class,
-                    responseContainer = "Set"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "List all API Keys for a subscription", description = "User must have the READ permission to use this service")
+    @ApiResponse(responseCode = "200", description = "List of API Keys for a subscription",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = ApiKeyEntity.class), uniqueItems = true)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = RolePermission.APPLICATION_SUBSCRIPTION, acls = RolePermissionAction.READ)
     })
@@ -211,11 +212,10 @@ public class ApplicationSubscriptionsResource {
     @POST
     @Path("{subscription}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Renew an API key",
-            notes = "User must have the MANAGE_API_KEYS permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 201, message = "A new API Key", response = ApiKeyEntity.class),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Renew an API key", description = "User must have the MANAGE_API_KEYS permission to use this service")
+    @ApiResponse(responseCode = "201", description = "A new API Key",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ApiKeyEntity.class)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = RolePermission.APPLICATION_SUBSCRIPTION, acls = RolePermissionAction.UPDATE)
     })
@@ -232,12 +232,10 @@ public class ApplicationSubscriptionsResource {
     @DELETE
     @Path("{subscription}/keys/{key}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Revoke an API key",
-            notes = "User must have the MANAGE_API_KEYS permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 204, message = "API key successfully revoked"),
-            @ApiResponse(code = 400, message = "API Key does not correspond to the subscription"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Revoke an API key", description = "User must have the MANAGE_API_KEYS permission to use this service")
+    @ApiResponse(responseCode = "204", description = "API key successfully revoked")
+    @ApiResponse(responseCode = "400", description = "API Key does not correspond to the subscription")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = RolePermission.APPLICATION_SUBSCRIPTION, acls = RolePermissionAction.DELETE)
     })
@@ -302,16 +300,16 @@ public class ApplicationSubscriptionsResource {
     private static class SubscriptionParam {
 
         @QueryParam("plan")
-        @ApiParam(value = "plan")
+        @Parameter(description = "plan")
         private ListStringParam plans;
 
         @QueryParam("api")
-        @ApiParam(value = "api")
+        @Parameter(description = "api")
         private ListStringParam apis;
 
         @QueryParam("status")
         @DefaultValue("accepted,pending,paused")
-        @ApiModelProperty(dataType = "string", allowableValues = "accepted, pending, rejected, closed", value = "Subscription status")
+        @Schema(type = "string", allowableValues = {"accepted", "pending", "rejected", "closed"}, description = "Subscription status")
         private ListSubscriptionStatusParam status;
 
         @QueryParam("api_key")

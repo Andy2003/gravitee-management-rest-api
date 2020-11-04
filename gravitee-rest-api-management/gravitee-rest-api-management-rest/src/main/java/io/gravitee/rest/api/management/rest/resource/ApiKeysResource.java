@@ -23,7 +23,12 @@ import io.gravitee.rest.api.model.permissions.RolePermission;
 import io.gravitee.rest.api.model.permissions.RolePermissionAction;
 import io.gravitee.rest.api.service.ApiKeyService;
 import io.gravitee.rest.api.validator.CustomApiKey;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -38,7 +43,7 @@ import javax.ws.rs.core.Response;
  * @author Nicolas GERAUD (nicolas.geraud at graviteesource.com)
  * @author GraviteeSource Team
  */
-@Api(tags = {"API Keys"})
+@Tag(name = "API Keys")
 public class ApiKeysResource extends AbstractResource {
 
     @Context
@@ -49,19 +54,18 @@ public class ApiKeysResource extends AbstractResource {
 
     @SuppressWarnings("UnresolvedRestParam")
     @PathParam("api")
-    @ApiParam(name = "api", hidden = true)
+    @Parameter(name = "api", hidden = true)
     private String api;
 
     @DELETE
     @Path("{key}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Revoke an API key",
-            notes = "User must have the API_SUBSCRIPTION:DELETE permission to use this service")
+    @Operation(summary = "Revoke an API key", description = "User must have the API_SUBSCRIPTION:DELETE permission to use this service")
     @Permissions({
             @Permission(value = RolePermission.API_SUBSCRIPTION, acls = RolePermissionAction.DELETE)
     })
     public Response revokeApiKey(
-            @PathParam("key") @ApiParam("The API key") String apiKey) {
+            @PathParam("key") @Parameter(description = "The API key") String apiKey) {
         apiKeyService.revoke(apiKey, true);
 
         return Response
@@ -73,17 +77,16 @@ public class ApiKeysResource extends AbstractResource {
     @Path("{key}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Update an API Key",
-            notes = "User must have the API_SUBSCRIPTION:UPDATE permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "API Key successfully updated", response = ApiKeyEntity.class),
-            @ApiResponse(code = 400, message = "Bad plan format"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Update an API Key", description = "User must have the API_SUBSCRIPTION:UPDATE permission to use this service")
+    @ApiResponse(responseCode = "200", description = "API Key successfully updated",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ApiKeyEntity.class)))
+    @ApiResponse(responseCode = "400", description = "Bad plan format")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = RolePermission.API_SUBSCRIPTION, acls = RolePermissionAction.UPDATE)
     })
     public Response updateApiKey(
-            @PathParam("key") @ApiParam("The API key") String apiKey,
+            @PathParam("key") @Parameter(description = "The API key") String apiKey,
             @Valid @NotNull ApiKeyEntity apiKeyEntity) {
         if (apiKeyEntity.getKey() != null && ! apiKey.equals(apiKeyEntity.getKey())) {
             return Response

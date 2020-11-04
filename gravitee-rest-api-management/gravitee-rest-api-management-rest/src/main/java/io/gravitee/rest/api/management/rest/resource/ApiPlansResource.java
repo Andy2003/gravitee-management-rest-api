@@ -28,7 +28,13 @@ import io.gravitee.rest.api.service.ApiService;
 import io.gravitee.rest.api.service.GroupService;
 import io.gravitee.rest.api.service.PlanService;
 import io.gravitee.rest.api.service.exceptions.ForbiddenAccessException;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -52,7 +58,7 @@ import static java.util.Comparator.comparingInt;
  * @author Nicolas GERAUD (nicolas.geraud at graviteesource.com)
  * @author GraviteeSource Team
  */
-@Api(tags = {"API Plans"})
+@Tag(name = "API Plans")
 public class ApiPlansResource extends AbstractResource {
 
     @Inject
@@ -69,17 +75,15 @@ public class ApiPlansResource extends AbstractResource {
 
     @SuppressWarnings("UnresolvedRestParam")
     @PathParam("api")
-    @ApiParam(name = "api", hidden = true)
+    @Parameter(name = "api", hidden = true)
     private String api;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(
-            value = "List plans for an API",
-            notes = "List all the plans accessible to the current user.")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "List accessible plans for current user", response = PlanEntity.class, responseContainer = "Set"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "List plans for an API", description = "List all the plans accessible to the current user.")
+    @ApiResponse(responseCode = "200", description = "List accessible plans for current user",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = PlanEntity.class), uniqueItems = true)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     public List<PlanEntity> getApiPlans(
             @QueryParam("status") @DefaultValue("published") final PlanStatusParam wishedStatus,
             @QueryParam("security") final PlanSecurityParam security) {
@@ -103,16 +107,15 @@ public class ApiPlansResource extends AbstractResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Create a plan",
-            notes = "User must have the MANAGE_PLANS permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 201, message = "Plan successfully created", response = PlanEntity.class),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Create a plan", description = "User must have the MANAGE_PLANS permission to use this service")
+    @ApiResponse(responseCode = "201", description = "Plan successfully created",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PlanEntity.class)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = API_PLAN, acls = CREATE)
     })
     public Response createApiPlan(
-            @ApiParam(name = "plan", required = true) @Valid @NotNull NewPlanEntity newPlanEntity) {
+            @Parameter(name = "plan", required = true) @Valid @NotNull NewPlanEntity newPlanEntity) {
         newPlanEntity.setApi(api);
         newPlanEntity.setType(PlanType.API);
 
@@ -128,18 +131,17 @@ public class ApiPlansResource extends AbstractResource {
     @Path("/{plan}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Update a plan",
-            notes = "User must have the MANAGE_PLANS permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "Plan successfully updated", response = PlanEntity.class),
-            @ApiResponse(code = 400, message = "Bad plan format"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Update a plan", description = "User must have the MANAGE_PLANS permission to use this service")
+    @ApiResponse(responseCode = "200", description = "Plan successfully updated",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PlanEntity.class)))
+    @ApiResponse(responseCode = "400", description = "Bad plan format")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = API_PLAN, acls = UPDATE)
     })
     public Response updateApiPlan(
             @PathParam("plan") String plan,
-            @ApiParam(name = "plan", required = true) @Valid @NotNull UpdatePlanEntity updatePlanEntity) {
+            @Parameter(name = "plan", required = true) @Valid @NotNull UpdatePlanEntity updatePlanEntity) {
 
         if (updatePlanEntity.getId() != null && !plan.equals(updatePlanEntity.getId())) {
             return Response
@@ -152,7 +154,7 @@ public class ApiPlansResource extends AbstractResource {
         updatePlanEntity.setId(plan);
 
         PlanEntity planEntity = planService.findById(plan);
-        if (! planEntity.getApi().contains(api)) {
+        if (!planEntity.getApi().contains(api)) {
             return Response
                     .status(Response.Status.BAD_REQUEST)
                     .entity("'plan' parameter does not correspond to the current API")
@@ -166,11 +168,10 @@ public class ApiPlansResource extends AbstractResource {
     @GET
     @Path("/{plan}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Get a plan",
-            notes = "User must have the READ permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "Plan information", response = PlanEntity.class),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Get a plan", description = "User must have the READ permission to use this service")
+    @ApiResponse(responseCode = "200", description = "Plan information",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PlanEntity.class)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     public Response getApiPlan(
             @PathParam("plan") String plan) {
 
@@ -192,18 +193,16 @@ public class ApiPlansResource extends AbstractResource {
     @DELETE
     @Path("/{plan}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Delete a plan",
-            notes = "User must have the MANAGE_PLANS permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 204, message = "Plan successfully deleted"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Delete a plan", description = "User must have the MANAGE_PLANS permission to use this service")
+    @ApiResponse(responseCode = "204", description = "Plan successfully deleted")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = API_PLAN, acls = DELETE)
     })
     public Response deleteApiPlan(
             @PathParam("plan") String plan) {
         PlanEntity planEntity = planService.findById(plan);
-        if (! planEntity.getApi().equals(api)) {
+        if (!planEntity.getApi().equals(api)) {
             return Response
                     .status(Response.Status.BAD_REQUEST)
                     .entity("'plan' parameter does not correspond to the current API")
@@ -218,18 +217,17 @@ public class ApiPlansResource extends AbstractResource {
     @POST
     @Path("/{plan}/_close")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Close  a plan",
-            notes = "User must have the MANAGE_PLANS permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 204, message = "Plan successfully closed", response = PlanEntity.class),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Close  a plan", description = "User must have the MANAGE_PLANS permission to use this service")
+    @ApiResponse(responseCode = "204", description = "Plan successfully closed",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PlanEntity.class)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = API_PLAN, acls = UPDATE)
     })
     public Response closeApiPlan(
             @PathParam("plan") String plan) {
         PlanEntity planEntity = planService.findById(plan);
-        if (! planEntity.getApi().equals(api)) {
+        if (!planEntity.getApi().equals(api)) {
             return Response
                     .status(Response.Status.BAD_REQUEST)
                     .entity("'plan' parameter does not correspond to the current API")
@@ -242,18 +240,17 @@ public class ApiPlansResource extends AbstractResource {
     @POST
     @Path("/{plan}/_publish")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Publicly publish plan",
-            notes = "User must have the MANAGE_PLANS permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 204, message = "Plan successfully published", response = PlanEntity.class),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Publicly publish plan", description = "User must have the MANAGE_PLANS permission to use this service")
+    @ApiResponse(responseCode = "204", description = "Plan successfully published",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PlanEntity.class)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = API_PLAN, acls = UPDATE)
     })
     public Response publishApiPlan(
             @PathParam("plan") String plan) {
         PlanEntity planEntity = planService.findById(plan);
-        if (! planEntity.getApi().equals(api)) {
+        if (!planEntity.getApi().equals(api)) {
             return Response
                     .status(Response.Status.BAD_REQUEST)
                     .entity("'plan' parameter does not correspond to the current API")
@@ -267,11 +264,10 @@ public class ApiPlansResource extends AbstractResource {
     @Deprecated
     @Path("/{plan}/_depreciate")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Deprecated, use '_deprecate' instead. Deprecate a plan",
-            notes = "User must have the API_PLAN[UPDATE] permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 204, message = "Plan successfully deprecated", response = PlanEntity.class),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Deprecated, use '_deprecate' instead. Deprecate a plan", description = "User must have the API_PLAN[UPDATE] permission to use this service")
+    @ApiResponse(responseCode = "204", description = "Plan successfully deprecated",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PlanEntity.class)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = API_PLAN, acls = UPDATE)
     })
@@ -284,18 +280,17 @@ public class ApiPlansResource extends AbstractResource {
     @POST
     @Path("/{plan}/_deprecate")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Deprecate a plan",
-            notes = "User must have the API_PLAN[UPDATE] permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 204, message = "Plan successfully deprecated", response = PlanEntity.class),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Deprecate a plan",
+            description = "User must have the API_PLAN[UPDATE] permission to use this service")
+    @ApiResponse(responseCode = "204", description = "Plan successfully deprecated",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PlanEntity.class)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = API_PLAN, acls = UPDATE)
     })
-    public Response deprecateApiPlan(
-            @PathParam("plan") String plan) {
+    public Response deprecateApiPlan(@PathParam("plan") String plan) {
         PlanEntity planEntity = planService.findById(plan);
-        if (! planEntity.getApi().equals(api)) {
+        if (!planEntity.getApi().equals(api)) {
             return Response
                     .status(Response.Status.BAD_REQUEST)
                     .entity("'plan' parameter does not correspond to the current API")
@@ -307,8 +302,8 @@ public class ApiPlansResource extends AbstractResource {
 
     private PlanEntity filterSensitiveData(PlanEntity entity) {
 
-        if ( hasPermission(API_GATEWAY_DEFINITION, entity.getApi(), RolePermissionAction.READ)
-                && hasPermission(API_PLAN, entity.getApi(), RolePermissionAction.READ) ) {
+        if (hasPermission(API_GATEWAY_DEFINITION, entity.getApi(), RolePermissionAction.READ)
+                && hasPermission(API_PLAN, entity.getApi(), RolePermissionAction.READ)) {
 
             // Return complete information if user has permission.
             return entity;

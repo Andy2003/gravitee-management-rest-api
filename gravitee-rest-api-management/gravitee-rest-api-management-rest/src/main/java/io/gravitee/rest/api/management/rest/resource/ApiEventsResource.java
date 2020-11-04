@@ -24,7 +24,13 @@ import io.gravitee.rest.api.model.EventQuery;
 import io.gravitee.rest.api.model.permissions.RolePermission;
 import io.gravitee.rest.api.model.permissions.RolePermissionAction;
 import io.gravitee.rest.api.service.EventService;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -36,7 +42,7 @@ import java.util.stream.Collectors;
  * @author Nicolas GERAUD (nicolas.geraud at graviteesource.com)
  * @author GraviteeSource Team
  */
-@Api(tags = {"API Events"})
+@Tag(name = "API Events")
 public class ApiEventsResource extends AbstractResource {
 
     @Inject
@@ -44,20 +50,19 @@ public class ApiEventsResource extends AbstractResource {
 
     @SuppressWarnings("UnresolvedRestParam")
     @PathParam("api")
-    @ApiParam(name = "api", hidden = true)
+    @Parameter(name = "api", hidden = true)
     private String api;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Get API's events",
-            notes = "User must have the MANAGE_LIFECYCLE permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "API's events"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Get API's events", description = "User must have the MANAGE_LIFECYCLE permission to use this service")
+    @ApiResponse(responseCode = "200", description = "API's events",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = EventEntity.class))))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = RolePermission.API_EVENT, acls = RolePermissionAction.READ)
     })
-    public List<EventEntity> getApiEventsEvents(@ApiParam @DefaultValue("all") @QueryParam("type") EventTypeListParam eventTypeListParam) {
+    public List<EventEntity> getApiEventsEvents(@Parameter @DefaultValue("all") @QueryParam("type") EventTypeListParam eventTypeListParam) {
         final EventQuery query = new EventQuery();
         query.setApi(api);
         return eventService.search(query).stream()

@@ -32,7 +32,9 @@ import io.gravitee.rest.api.service.EnvironmentService;
 import io.gravitee.rest.api.service.common.GraviteeContext;
 import io.gravitee.rest.api.service.configuration.identity.IdentityProviderActivationService;
 import io.gravitee.rest.api.service.configuration.identity.IdentityProviderService;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -50,7 +52,6 @@ import java.util.stream.Collectors;
  * @author Florent CHAMFROY (florent.chamfroy at graviteesource.com)
  * @author GraviteeSource Team
  */
-@Api
 public class EnvironmentResource extends AbstractResource {
 
     @Context
@@ -66,15 +67,14 @@ public class EnvironmentResource extends AbstractResource {
     private IdentityProviderActivationService identityProviderActivationService;
 
     @PathParam("envId")
-    @ApiParam(name = "envId", hidden = true)
+    @Parameter(name = "envId", hidden = true)
     private String envId;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Get an Environment", tags = {"Environment"})
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "Found Environment"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Get an Environment", tags = {"Environment"})
+    @ApiResponse(responseCode = "200", description = "Found Environment")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     public Response getEnvironment() {
         return Response
                 .ok(environmentService.findById(envId))
@@ -89,12 +89,11 @@ public class EnvironmentResource extends AbstractResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Create an Environment", tags = {"Environment"})
-    @ApiResponses({
-            @ApiResponse(code = 201, message = "Environment successfully created"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Create an Environment", tags = {"Environment"})
+    @ApiResponse(responseCode = "201", description = "Environment successfully created")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     public Response createEnvironment(
-            @ApiParam(name = "environmentEntity", required = true) @Valid @NotNull final UpdateEnvironmentEntity environmentEntity) {
+            @Parameter(name = "environmentEntity", required = true) @Valid @NotNull final UpdateEnvironmentEntity environmentEntity) {
         environmentEntity.setId(GraviteeContext.getCurrentEnvironment());
         return Response
                 .status(Status.CREATED)
@@ -109,10 +108,9 @@ public class EnvironmentResource extends AbstractResource {
      */
     @DELETE
     @Consumes(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Delete an Environment", tags = {"Environment"})
-    @ApiResponses({
-            @ApiResponse(code = 204, message = "Environment successfully deleted"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Delete an Environment", tags = {"Environment"})
+    @ApiResponse(responseCode = "204", description = "Environment successfully deleted")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     public Response deleteEnvironment() {
         environmentService.delete(GraviteeContext.getCurrentEnvironment());
         //TODO: should delete all items that refers to this environment

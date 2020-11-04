@@ -33,10 +33,12 @@ import io.gravitee.rest.api.service.NotifierService;
 import io.gravitee.rest.api.service.configuration.application.ApplicationTypeService;
 import io.gravitee.rest.api.service.notification.Hook;
 import io.gravitee.rest.api.service.notification.PortalHook;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -53,7 +55,7 @@ import java.util.List;
  * @author Nicolas GERAUD (nicolas.geraud at graviteesource.com)
  * @author GraviteeSource Team
  */
-@Api(tags = {"Configuration"})
+@Tag(name = "Configuration")
 public class EnvironmentConfigurationResource {
 
     @Context
@@ -67,7 +69,7 @@ public class EnvironmentConfigurationResource {
 
     @GET
     @Path("/hooks")
-    @ApiOperation("Get the list of available hooks")
+    @Operation(summary = "Get the list of available hooks")
     @Produces(MediaType.APPLICATION_JSON)
     public Hook[] getConfigurationHooks() {
         return Arrays.stream(PortalHook.values()).filter(h -> !h.isHidden()).toArray(Hook[]::new);
@@ -76,10 +78,10 @@ public class EnvironmentConfigurationResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("notifiers")
-    @ApiOperation(value = "List of available notifiers")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "List of notifiers", response = NotifierEntity.class, responseContainer = "List"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "List of available notifiers")
+    @ApiResponse(responseCode = "200", description = "List of notifiers",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = NotifierEntity.class))))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = RolePermission.ENVIRONMENT_NOTIFICATION, acls = RolePermissionAction.READ)
     })
@@ -156,7 +158,7 @@ public class EnvironmentConfigurationResource {
 
     @GET
     @Path("applications/types")
-    @ApiOperation("Get the list of enabled application types")
+    @Operation(summary = "Get the list of enabled application types")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getEnabledApplicationTypes() {
         ApplicationTypesEntity enabledApplicationTypes = applicationTypeService.getEnabledApplicationTypes();
