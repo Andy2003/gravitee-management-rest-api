@@ -60,7 +60,7 @@ public class PortalResource {
     @ApiResponse(responseCode = "200", description = "Portal configuration",
             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PortalConfigEntity.class)))
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    public PortalConfigEntity getConfig() {
+    public PortalConfigEntity getPortalConfig() {
         return configService.getPortalConfig();
     }
 

@@ -137,7 +137,7 @@ public class ApiResource extends AbstractResource {
     @ApiResponse(responseCode = "200", description = "API's picture", content = @Content(mediaType = "*/*", schema = @Schema(type = "string", format = "binary")))
     @ApiResponse(responseCode = "500", description = "Internal server error")
     public Response getApiPicture(@Context Request request) throws ApiNotFoundException {
-        return getImageResponse(request, api, apiService.getPicture(api));
+        return getImageResponse(request, apiService.getPicture(api));
     }
 
     @GET
@@ -146,10 +146,10 @@ public class ApiResource extends AbstractResource {
     @ApiResponse(responseCode = "200", description = "API's background", content = @Content(mediaType = "*/*", schema = @Schema(type = "string", format = "binary")))
     @ApiResponse(responseCode = "500", description = "Internal server error")
     public Response getApiBackground(@Context Request request) throws ApiNotFoundException {
-        return getImageResponse(request, api, apiService.getBackground(api));
+        return getImageResponse(request, apiService.getBackground(api));
     }
 
-    private Response getImageResponse(final Request request, final String api, InlinePictureEntity image) {
+    private Response getImageResponse(final Request request, InlinePictureEntity image) {
         canReadApi(api);
         CacheControl cc = new CacheControl();
         cc.setNoTransform(true);
