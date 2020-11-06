@@ -334,12 +334,12 @@ public class RoleServiceImpl extends AbstractService implements RoleService {
         return roleEntity;
     }
 
-    private int[] convertPermissions(io.gravitee.rest.api.model.permissions.RoleScope scope, Map<String, char[]> perms) {
+    private int[] convertPermissions(RoleScope scope, Map<String, char[]> perms) {
         if (perms == null || perms.isEmpty()) {
             return new int[0];
         }
         int[] result = new int[perms.size()];
-        int idx=0;
+        int idx = 0;
         for (Map.Entry<String, char[]> entry : perms.entrySet()) {
 
             int perm = 0;
@@ -351,7 +351,7 @@ public class RoleServiceImpl extends AbstractService implements RoleService {
         return result;
     }
 
-    private Map<String, char[]> convertPermissions(io.gravitee.rest.api.model.permissions.RoleScope scope, int[] perms) {
+    private Map<String, char[]> convertPermissions(RoleScope scope, int[] perms) {
         if (perms == null) {
             return Collections.emptyMap();
         }

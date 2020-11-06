@@ -16,6 +16,7 @@
 package io.gravitee.rest.api.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.gravitee.policy.api.swagger.Policy;
 import io.gravitee.rest.api.model.ImportSwaggerDescriptorEntity;
 import io.gravitee.rest.api.model.ImportSwaggerDescriptorEntity.Format;
 import io.gravitee.rest.api.model.api.SwaggerApiEntity;
@@ -45,6 +46,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -82,7 +84,7 @@ public class SwaggerServiceImpl implements SwaggerService {
         }
 
         if (descriptor != null) {
-            List<OAIOperationVisitor> visitors = new ArrayList<>();
+            List<OAIOperationVisitor<Optional<Policy>>> visitors = new ArrayList<>();
             if (swaggerDescriptor.isWithPolicyPaths()) {
                 visitors = policyOperationVisitorManager.getPolicyVisitors().stream()
                         .filter(operationVisitor -> swaggerDescriptor.getWithPolicies() != null

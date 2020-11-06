@@ -20,9 +20,9 @@ import io.gravitee.common.component.Lifecycle;
 import io.gravitee.common.utils.IdGenerator;
 import io.gravitee.repository.exceptions.TechnicalException;
 import io.gravitee.repository.management.api.DictionaryRepository;
-import io.gravitee.repository.management.model.*;
 import io.gravitee.repository.management.model.Dictionary;
 import io.gravitee.repository.management.model.DictionaryType;
+import io.gravitee.repository.management.model.*;
 import io.gravitee.rest.api.model.EventType;
 import io.gravitee.rest.api.model.configuration.dictionary.*;
 import io.gravitee.rest.api.service.AuditService;
@@ -31,7 +31,6 @@ import io.gravitee.rest.api.service.common.GraviteeContext;
 import io.gravitee.rest.api.service.configuration.dictionary.DictionaryService;
 import io.gravitee.rest.api.service.exceptions.TechnicalManagementException;
 import io.gravitee.rest.api.service.impl.AbstractService;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -401,7 +400,7 @@ public class DictionaryServiceImpl extends AbstractService implements Dictionary
         if (providerEntity != null && providerEntity.getType() != null && providerEntity.getConfiguration() != null) {
             provider = new DictionaryProvider();
             provider.setType(providerEntity.getType());
-            provider.setConfiguration(providerEntity.getConfiguration().toString());
+            provider.setConfiguration(providerEntity.getConfiguration());
         }
         return provider;
     }

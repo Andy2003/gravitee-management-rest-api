@@ -16,21 +16,17 @@
 package io.gravitee.rest.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.gravitee.rest.api.model.Visibility;
 import io.gravitee.rest.api.model.api.ApiEntity;
-import io.gravitee.rest.api.service.jackson.ser.api.ApiCompositeSerializer;
-import io.gravitee.rest.api.service.jackson.ser.api.ApiSerializer;
 import io.gravitee.rest.api.service.spring.ServiceConfiguration;
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -46,39 +42,27 @@ public class ApiService_EnumValueWittenLowercaseTest {
     public void setUp() {
         ServiceConfiguration serviceConfiguration = new ServiceConfiguration();
         objectMapper = serviceConfiguration.objectMapper();
-
-        ApiCompositeSerializer apiSerializer = (ApiCompositeSerializer) serviceConfiguration.apiSerializer();
-        apiSerializer.afterPropertiesSet();
-
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(ApiEntity.class, apiSerializer);
-        objectMapper.registerModule(module);
     }
 
     @Test
-    public void shouldConvertAsJsonForExportWithUppercaseEnum() throws IOException {
+    public void shouldConvertAsJsonForExportWithUppercaseEnum() throws IOException, JSONException {
         ApiEntity apiEntity = new ApiEntity();
         apiEntity.setId(API_ID);
         apiEntity.setName("test");
         apiEntity.setDescription("Gravitee.io");
         apiEntity.setVisibility(Visibility.PUBLIC);
 
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put(ApiSerializer.METADATA_EXPORT_VERSION, ApiSerializer.Version.DEFAULT.getVersion());
-        metadata.put(ApiSerializer.METADATA_FILTERED_FIELDS_LIST, Arrays.asList("groups", "members", "pages", "plans", "metadata", "media"));
-        apiEntity.setMetadata(metadata);
-
         String result = objectMapper.writeValueAsString(apiEntity);
-        assertThat(result).isEqualTo("{\n" +
+        JSONAssert.assertEquals("{\n" +
             "  \"name\" : \"test\",\n" +
             "  \"description\" : \"Gravitee.io\",\n" +
             "  \"visibility\" : \"PUBLIC\",\n" +
             "  \"paths\" : { },\n" +
             "  \"resources\" : [ ],\n" +
-            "  \"properties\" : [ ],\n" +
+            "  \"disable_membership_notifications\" : false,\n" +
             "  \"id\" : \"id-api\",\n" +
             "  \"path_mappings\" : [ ]\n" +
-            "}");
+            "}", result, JSONCompareMode.STRICT);
     }
 
     @Test

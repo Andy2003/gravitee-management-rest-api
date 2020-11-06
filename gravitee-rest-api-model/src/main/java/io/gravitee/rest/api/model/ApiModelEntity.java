@@ -16,8 +16,8 @@
 package io.gravitee.rest.api.model;
 
 import io.gravitee.common.component.Lifecycle;
-import io.gravitee.definition.model.Path;
 import io.gravitee.definition.model.Properties;
+import io.gravitee.definition.model.Rule;
 import io.gravitee.definition.model.plugins.resources.Resource;
 import io.gravitee.definition.model.services.Services;
 import io.gravitee.rest.api.model.api.ApiLifecycleState;
@@ -37,7 +37,7 @@ public class ApiModelEntity {
     private String description;
     private Set<String> groups;
     private ProxyModelEntity proxy;
-    private Map<String, Path> paths = new HashMap<>();
+    private Map<String, List<Rule>> paths = new HashMap<>();
     private Date deployedAt;
     private Date createdAt;
     private Date updatedAt;
@@ -126,11 +126,11 @@ public class ApiModelEntity {
         this.proxy = proxy;
     }
 
-    public Map<String, Path> getPaths() {
+    public Map<String, List<Rule>> getPaths() {
         return paths;
     }
 
-    public void setPaths(Map<String, Path> paths) {
+    public void setPaths(Map<String, List<Rule>> paths) {
         this.paths = paths;
     }
 
@@ -165,7 +165,7 @@ public class ApiModelEntity {
     public void setTags(Set<String> tags) {
         this.tags = tags;
     }
-    
+
     public Date getDeployedAt() {
         return deployedAt;
     }
@@ -173,7 +173,7 @@ public class ApiModelEntity {
     public void setDeployedAt(Date deployedAt) {
         this.deployedAt = deployedAt;
     }
-    
+
     public String getPicture() {
         return picture;
     }
@@ -246,23 +246,23 @@ public class ApiModelEntity {
 
     public String toString() {
         return "ApiEntity{" +
-            "id='" + id + '\'' +
-            ", name='" + name + '\'' +
-            ", version='" + version + '\'' +
-            ", description='" + description + '\'' +
-            ", proxy=" + proxy +
-            ", paths=" + paths +
-            ", createdAt=" + createdAt +
-            ", updatedAt=" + updatedAt +
-            ", visibility=" + visibility +
-            ", state=" + state +
-            ", primaryOwner=" + primaryOwner +
-            ", tags=" + tags +
-            ", category=" + categories +
-            ", groups=" + groups +
-            ", metadata=" + metadata +
-            ", lifecycleState=" + lifecycleState +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", version='" + version + '\'' +
+                ", description='" + description + '\'' +
+                ", proxy=" + proxy +
+                ", paths=" + paths +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", visibility=" + visibility +
+                ", state=" + state +
+                ", primaryOwner=" + primaryOwner +
+                ", tags=" + tags +
+                ", category=" + categories +
+                ", groups=" + groups +
+                ", metadata=" + metadata +
+                ", lifecycleState=" + lifecycleState +
                 ", disableMembershipNotifications=" + disableMembershipNotifications +
-            '}';
+                '}';
     }
 }

@@ -37,12 +37,10 @@ import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.servers.ServerVariable;
 import io.swagger.v3.oas.models.servers.ServerVariables;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.net.URI;
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,6 +50,7 @@ import static io.gravitee.rest.api.service.validator.PolicyCleaner.clearNullValu
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
+
 
 /**
  * @author David BRASSELY (david.brassely at graviteesource.com)
@@ -63,13 +62,13 @@ public class OAIToAPIConverter implements SwaggerToApiConverter<OAIDescriptor>, 
 
     private final static String PICTURE_REGEX = "^data:image/[\\w]+;base64,.*$";
 
-    private final Collection<? extends OAIOperationVisitor> visitors;
+    private final Collection<? extends OAIOperationVisitor<Optional<Policy>>> visitors;
 
     private GroupService groupService;
 
     private TagService tagService;
 
-    public OAIToAPIConverter(Collection<? extends OAIOperationVisitor> visitors, GroupService groupService, TagService tagService) {
+    public OAIToAPIConverter(Collection<? extends OAIOperationVisitor<Optional<Policy>>> visitors, GroupService groupService, TagService tagService) {
         this.visitors = visitors;
         this.groupService = groupService;
         this.tagService = tagService;
@@ -98,47 +97,35 @@ public class OAIToAPIConverter implements SwaggerToApiConverter<OAIDescriptor>, 
         apiEntity.setVersion(oai.getInfo().getVersion());
 
         // Paths
-        apiEntity.setPaths(oai.getPaths().entrySet().stream()
-                .map(entry -> {
-                    final io.gravitee.definition.model.Path path = new Path();
-                    path.setPath(entry.getKey().replaceAll("\\{(.[^/\\}]*)\\}", ":$1"));
+        Map<String, List<Rule>> paths = new LinkedHashMap<>();
+        oai.getPaths().forEach((oaiPath, pathItem) -> {
+            Map<PathItem.HttpMethod, Operation> operations = pathItem.readOperationsMap();
+            List<Rule> rules = new ArrayList<>();
 
-                    Map<PathItem.HttpMethod, Operation> operations = entry.getValue().readOperationsMap();
-                    List<Rule> rules = new ArrayList<>();
+            operations.forEach((httpMethod, operation) ->
+                    visitors.forEach((Consumer<OAIOperationVisitor<Optional<Policy>>>) oaiOperationVisitor -> {
+                        // Consider only policy visitor for now
+                        Optional<Policy> policy = oaiOperationVisitor.visit(oai, operation);
 
-                    operations.forEach(new BiConsumer<PathItem.HttpMethod, Operation>() {
-                        @Override
-                        public void accept(PathItem.HttpMethod httpMethod, Operation operation) {
-                            visitors.forEach(new Consumer<OAIOperationVisitor>() {
-                                @Override
-                                public void accept(OAIOperationVisitor oaiOperationVisitor) {
-                                    // Consider only policy visitor for now
-                                    Optional<Policy> policy = (Optional<Policy>) oaiOperationVisitor.visit(oai, operation);
+                        if (policy.isPresent()) {
+                            final Rule rule = new Rule();
+                            rule.setEnabled(true);
+                            rule.setDescription(operation.getSummary() == null ?
+                                    (operation.getOperationId() == null ? operation.getDescription() : operation.getOperationId()) :
+                                    operation.getSummary());
+                            rule.setMethods(singleton(HttpMethod.valueOf(httpMethod.name())));
 
-                                    if (policy.isPresent()) {
-                                        final Rule rule = new Rule();
-                                        rule.setEnabled(true);
-                                        rule.setDescription(operation.getSummary() == null ?
-                                                (operation.getOperationId() == null ? operation.getDescription() : operation.getOperationId()) :
-                                                operation.getSummary());
-                                        rule.setMethods(singleton(HttpMethod.valueOf(httpMethod.name())));
-
-                                        io.gravitee.definition.model.Policy defPolicy = new io.gravitee.definition.model.Policy();
-                                        defPolicy.setName(policy.get().getName());
-                                        defPolicy.setConfiguration(clearNullValues(policy.get().getConfiguration()));
-                                        rule.setPolicy(defPolicy);
-                                        rules.add(rule);
-                                    }
-                                }
-                            });
+                            io.gravitee.definition.model.Policy defPolicy = new io.gravitee.definition.model.Policy();
+                            defPolicy.setName(policy.get().getName());
+                            defPolicy.setConfiguration(clearNullValues(policy.get().getConfiguration()));
+                            rule.setPolicy(defPolicy);
+                            rules.add(rule);
                         }
-                    });
+                    }));
 
-                    path.setRules(rules);
-
-                    return path;
-                })
-                .collect(toMap(Path::getPath, path -> path)));
+            paths.put(oaiPath.replaceAll("\\{(.[^/}]*)}", ":$1"), rules);
+        });
+        apiEntity.setPaths(paths);
 
         // Path Mappings
         if (apiEntity.getPaths() != null) {
@@ -206,7 +193,7 @@ public class OAIToAPIConverter implements SwaggerToApiConverter<OAIDescriptor>, 
             // Groups
             if (xGraviteeIODefinition.getGroups() != null && !xGraviteeIODefinition.getGroups().isEmpty()) {
                 // Groups in schema are group name. Replace them by id
-                Set<String> groupIdsToImport= xGraviteeIODefinition.getGroups().stream()
+                Set<String> groupIdsToImport = xGraviteeIODefinition.getGroups().stream()
                         .flatMap(group -> groupService.findByName(group).stream())
                         .map(GroupEntity::getId)
                         .collect(Collectors.toSet());
@@ -304,7 +291,7 @@ public class OAIToAPIConverter implements SwaggerToApiConverter<OAIDescriptor>, 
                                                      List<String> templateUrls) {
         List<String> evaluatedUrls = new ArrayList<>();
         for (String templateUrl : templateUrls) {
-            Matcher matcher = Pattern.compile("\\{" + varName + "\\}").matcher(templateUrl);
+            Matcher matcher = Pattern.compile("\\{" + varName + "}").matcher(templateUrl);
             if (matcher.find()) {
                 if (CollectionUtils.isEmpty(serverVar.getEnum()) && serverVar.getDefault() != null) {
                     evaluatedUrls.add(templateUrl.replace(matcher.group(0), serverVar.getDefault()));

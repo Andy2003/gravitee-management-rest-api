@@ -16,7 +16,6 @@
 package io.gravitee.rest.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.google.common.base.Charsets;
@@ -30,12 +29,13 @@ import io.gravitee.repository.management.api.ApiRepository;
 import io.gravitee.repository.management.api.MembershipRepository;
 import io.gravitee.repository.management.model.Api;
 import io.gravitee.rest.api.model.*;
-import io.gravitee.rest.api.model.api.ApiEntity;
 import io.gravitee.rest.api.model.parameters.Key;
 import io.gravitee.rest.api.model.permissions.SystemRole;
 import io.gravitee.rest.api.service.impl.ApiServiceImpl;
 import io.gravitee.rest.api.service.jackson.filter.ApiPermissionFilter;
-import io.gravitee.rest.api.service.jackson.ser.api.*;
+import io.gravitee.rest.api.service.jackson.ser.ApiMapper;
+import io.gravitee.rest.api.service.jackson.ser.ApiMapperImpl;
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +44,8 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
@@ -92,6 +94,8 @@ public class ApiService_ExportAsJsonTest {
     private ApiMetadataService apiMetadataService;
     @Mock
     private MediaService mediaService;
+    @Spy
+    private ApiMapper apiMapper = new ApiMapperImpl();
 
     @Before
     public void setUp() throws TechnicalException {
@@ -99,35 +103,6 @@ public class ApiService_ExportAsJsonTest {
         objectMapper.setFilterProvider(new SimpleFilterProvider(Collections.singletonMap("apiMembershipTypeFilter", apiMembershipTypeFilter)));
 
         when(parameterService.find(Key.PORTAL_ENTRYPOINT)).thenReturn(Key.PORTAL_ENTRYPOINT.defaultValue());
-        // register API Entity serializers
-        when(applicationContext.getBean(MembershipService.class)).thenReturn(membershipService);
-        when(applicationContext.getBean(PlanService.class)).thenReturn(planService);
-        when(applicationContext.getBean(PageService.class)).thenReturn(pageService);
-        when(applicationContext.getBean(GroupService.class)).thenReturn(groupService);
-        when(applicationContext.getBean(UserService.class)).thenReturn(userService);
-        when(applicationContext.getBean(ApiMetadataService.class)).thenReturn(apiMetadataService);
-        when(applicationContext.getBean(MediaService.class)).thenReturn(mediaService);
-        ApiCompositeSerializer apiCompositeSerializer = new ApiCompositeSerializer();
-        ApiSerializer apiDefaultSerializer = new ApiDefaultSerializer();
-        apiDefaultSerializer.setApplicationContext(applicationContext);
-
-        //V_1_15
-        ApiSerializer apiPrior115VersionSerializer = new Api1_15VersionSerializer();
-        apiPrior115VersionSerializer.setApplicationContext(applicationContext);
-        //V_1_20
-        ApiSerializer apiPrior120VersionSerializer = new Api1_20VersionSerializer();
-        apiPrior120VersionSerializer.setApplicationContext(applicationContext);
-        //V_1_25
-        ApiSerializer apiPrior125VersionSerializer = new Api1_25VersionSerializer();
-        apiPrior125VersionSerializer.setApplicationContext(applicationContext);
-        //V_3_0
-        ApiSerializer apiPrior30VersionSerializer = new Api3_0VersionSerializer();
-        apiPrior30VersionSerializer.setApplicationContext(applicationContext);
-
-        apiCompositeSerializer.setSerializers(Arrays.asList(apiDefaultSerializer, apiPrior115VersionSerializer, apiPrior120VersionSerializer, apiPrior125VersionSerializer, apiPrior30VersionSerializer));
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(ApiEntity.class, apiCompositeSerializer);
-        objectMapper.registerModule(module);
 
         Api api = new Api();
         api.setId(API_ID);
@@ -154,11 +129,11 @@ public class ApiService_ExportAsJsonTest {
             io.gravitee.definition.model.Api apiDefinition = new io.gravitee.definition.model.Api();
             apiDefinition.setPaths(Collections.emptyMap());
             apiDefinition.setProxy(proxy);
-            ResponseTemplates responseTemplates = new ResponseTemplates();
+            Map<String, ResponseTemplate> responseTemplates = new LinkedHashMap<>();
             ResponseTemplate responseTemplate = new ResponseTemplate();
             responseTemplate.setStatusCode(400);
             responseTemplate.setBody("{\"bad\":\"news\"}");
-            responseTemplates.setTemplates(Collections.singletonMap("*/*", responseTemplate));
+            responseTemplates.put("*/*", responseTemplate);
             apiDefinition.setResponseTemplates(Collections.singletonMap("API_KEY_MISSING", responseTemplates));
             String definition = objectMapper.writeValueAsString(apiDefinition);
             api.setDefinition(definition);
@@ -213,10 +188,8 @@ public class ApiService_ExportAsJsonTest {
         publishedPlan.setSecurity(PlanSecurityType.API_KEY);
         publishedPlan.setValidation(PlanValidationType.AUTO);
         publishedPlan.setStatus(PlanStatus.PUBLISHED);
-        Map<String, Path> paths = new HashMap<>();
-        Path path = new Path();
-        path.setPath("/");
-        io.gravitee.definition.model.Rule rule = new io.gravitee.definition.model.Rule();
+        Map<String, List<Rule>> paths = new HashMap<>();
+        Rule rule = new Rule();
         rule.setEnabled(true);
         rule.setMethods(Sets.newSet(HttpMethod.GET));
         Policy policy = new Policy();
@@ -230,8 +203,7 @@ public class ApiService_ExportAsJsonTest {
                 "          }" + ls +
                 "        }");
         rule.setPolicy(policy);
-        path.setRules(Collections.singletonList(rule));
-        paths.put("/", path);
+        paths.put("/", Collections.singletonList(rule));
         publishedPlan.setPaths(paths);
         PlanEntity closedPlan = new PlanEntity();
         closedPlan.setId("closedPlan-id");
@@ -257,107 +229,107 @@ public class ApiService_ExportAsJsonTest {
     }
 
     @Test
-    public void shouldConvertAsJsonForExport() throws TechnicalException, IOException {
-        shouldConvertAsJsonForExport(ApiSerializer.Version.DEFAULT, null);
+    public void shouldConvertAsJsonForExport() throws TechnicalException, IOException, JSONException {
+        shouldConvertAsJsonForExport(ApiVersion.DEFAULT, null);
     }
 
     @Test
-    public void shouldConvertAsJsonForExport_3_0() throws TechnicalException, IOException {
-        shouldConvertAsJsonForExport(ApiSerializer.Version.V_3_0, "3_0");
+    public void shouldConvertAsJsonForExport_3_0() throws TechnicalException, IOException, JSONException {
+        shouldConvertAsJsonForExport(ApiVersion.V_3_0, "3_0");
     }
 
     @Test
-    public void shouldConvertAsJsonForExport_1_15() throws TechnicalException, IOException {
-        shouldConvertAsJsonForExport(ApiSerializer.Version.V_1_15, "1_15");
+    public void shouldConvertAsJsonForExport_1_15() throws TechnicalException, IOException, JSONException {
+        shouldConvertAsJsonForExport(ApiVersion.V_1_15, "1_15");
     }
 
     @Test
-    public void shouldConvertAsJsonForExport_1_20() throws TechnicalException, IOException {
-        shouldConvertAsJsonForExport(ApiSerializer.Version.V_1_20, "1_20");
+    public void shouldConvertAsJsonForExport_1_20() throws TechnicalException, IOException, JSONException {
+        shouldConvertAsJsonForExport(ApiVersion.V_1_20, "1_20");
     }
 
     @Test
-    public void shouldConvertAsJsonForExport_1_25() throws TechnicalException, IOException {
-        shouldConvertAsJsonForExport(ApiSerializer.Version.V_1_25, "1_25");
+    public void shouldConvertAsJsonForExport_1_25() throws TechnicalException, IOException, JSONException {
+        shouldConvertAsJsonForExport(ApiVersion.V_1_25, "1_25");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutMembers() throws IOException {
-        shouldConvertAsJsonWithoutMembers(ApiSerializer.Version.DEFAULT, null);
+    public void shouldConvertAsJsonWithoutMembers() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutMembers(ApiVersion.DEFAULT, null);
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutMembers_3_0() throws IOException {
-        shouldConvertAsJsonWithoutMembers(ApiSerializer.Version.V_3_0, "3_0");
+    public void shouldConvertAsJsonWithoutMembers_3_0() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutMembers(ApiVersion.V_3_0, "3_0");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutMembers_1_15() throws IOException {
-        shouldConvertAsJsonWithoutMembers(ApiSerializer.Version.V_1_15, "1_15");
+    public void shouldConvertAsJsonWithoutMembers_1_15() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutMembers(ApiVersion.V_1_15, "1_15");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutMembers_1_20() throws IOException {
-        shouldConvertAsJsonWithoutMembers(ApiSerializer.Version.V_1_20, "1_20");
+    public void shouldConvertAsJsonWithoutMembers_1_20() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutMembers(ApiVersion.V_1_20, "1_20");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutMembers_1_25() throws IOException {
-        shouldConvertAsJsonWithoutMembers(ApiSerializer.Version.V_1_25, "1_25");
+    public void shouldConvertAsJsonWithoutMembers_1_25() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutMembers(ApiVersion.V_1_25, "1_25");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutPages() throws IOException {
-        shouldConvertAsJsonWithoutPages(ApiSerializer.Version.DEFAULT, null);
+    public void shouldConvertAsJsonWithoutPages() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutPages(ApiVersion.DEFAULT, null);
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutPages_3_0() throws IOException {
-        shouldConvertAsJsonWithoutPages(ApiSerializer.Version.V_3_0, "3_0");
+    public void shouldConvertAsJsonWithoutPages_3_0() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutPages(ApiVersion.V_3_0, "3_0");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutPages_1_15() throws IOException {
-        shouldConvertAsJsonWithoutPages(ApiSerializer.Version.V_1_15, "1_15");
+    public void shouldConvertAsJsonWithoutPages_1_15() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutPages(ApiVersion.V_1_15, "1_15");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutPages_1_20() throws IOException {
-        shouldConvertAsJsonWithoutPages(ApiSerializer.Version.V_1_20, "1_20");
+    public void shouldConvertAsJsonWithoutPages_1_20() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutPages(ApiVersion.V_1_20, "1_20");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutPages_1_25() throws IOException {
-        shouldConvertAsJsonWithoutPages(ApiSerializer.Version.V_1_25, "1_25");
+    public void shouldConvertAsJsonWithoutPages_1_25() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutPages(ApiVersion.V_1_25, "1_25");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutPlans() throws IOException {
-        shouldConvertAsJsonWithoutPlans(ApiSerializer.Version.DEFAULT, null);
+    public void shouldConvertAsJsonWithoutPlans() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutPlans(ApiVersion.DEFAULT, null);
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutPlans_3_0() throws IOException {
-        shouldConvertAsJsonWithoutPlans(ApiSerializer.Version.V_3_0, "3_0");
+    public void shouldConvertAsJsonWithoutPlans_3_0() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutPlans(ApiVersion.V_3_0, "3_0");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutPlans_1_15() throws IOException {
-        shouldConvertAsJsonWithoutPlans(ApiSerializer.Version.V_1_15, "1_15");
+    public void shouldConvertAsJsonWithoutPlans_1_15() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutPlans(ApiVersion.V_1_15, "1_15");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutPlans_1_20() throws IOException {
-        shouldConvertAsJsonWithoutPlans(ApiSerializer.Version.V_1_20, "1_20");
+    public void shouldConvertAsJsonWithoutPlans_1_20() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutPlans(ApiVersion.V_1_20, "1_20");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutPlans_1_25() throws IOException {
-        shouldConvertAsJsonWithoutPlans(ApiSerializer.Version.V_1_25, "1_25");
+    public void shouldConvertAsJsonWithoutPlans_1_25() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutPlans(ApiVersion.V_1_25, "1_25");
     }
 
     @Test
-    public void shouldConvertAsJsonMultipleGroups_1_15() throws IOException, TechnicalException {
+    public void shouldConvertAsJsonMultipleGroups_1_15() throws IOException, JSONException, TechnicalException {
         Api api = new Api();
         api.setId(API_ID);
         api.setDescription("Gravitee.io");
@@ -404,88 +376,88 @@ public class ApiService_ExportAsJsonTest {
         }
 
         when(apiRepository.findById(API_ID)).thenReturn(Optional.of(api));
-        String jsonForExport = apiService.exportAsJson(API_ID, ApiSerializer.Version.V_1_15.getVersion(), SystemRole.PRIMARY_OWNER.name());
+        String jsonForExport = apiService.exportAsJson(API_ID, ApiVersion.V_1_15.getVersion(), SystemRole.PRIMARY_OWNER.name());
 
         URL url = Resources.getResource("io/gravitee/rest/api/management/service/export-convertAsJsonForExportMultipleEndpointGroups-1_15.json");
         String expectedJson = Resources.toString(url, Charsets.UTF_8);
 
         assertThat(jsonForExport).isNotNull();
-        assertThat(objectMapper.readTree(expectedJson)).isEqualTo(objectMapper.readTree(jsonForExport));
+        JSONAssert.assertEquals(jsonForExport, expectedJson, JSONCompareMode.STRICT);
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutMetadata() throws IOException {
-        shouldConvertAsJsonWithoutMetadata(ApiSerializer.Version.DEFAULT, null);
+    public void shouldConvertAsJsonWithoutMetadata() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutMetadata(ApiVersion.DEFAULT, null);
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutMetadata_3_0() throws IOException {
-        shouldConvertAsJsonWithoutMetadata(ApiSerializer.Version.V_3_0, "3_0");
+    public void shouldConvertAsJsonWithoutMetadata_3_0() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutMetadata(ApiVersion.V_3_0, "3_0");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutMetadata_1_15() throws IOException {
-        shouldConvertAsJsonWithoutMetadata(ApiSerializer.Version.V_1_15, "1_15");
+    public void shouldConvertAsJsonWithoutMetadata_1_15() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutMetadata(ApiVersion.V_1_15, "1_15");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutMetadata_1_20() throws IOException {
-        shouldConvertAsJsonWithoutMetadata(ApiSerializer.Version.V_1_20, "1_20");
+    public void shouldConvertAsJsonWithoutMetadata_1_20() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutMetadata(ApiVersion.V_1_20, "1_20");
     }
 
     @Test
-    public void shouldConvertAsJsonWithoutMetadata_1_25() throws IOException {
-        shouldConvertAsJsonWithoutMetadata(ApiSerializer.Version.V_1_25, "1_25");
+    public void shouldConvertAsJsonWithoutMetadata_1_25() throws IOException, JSONException {
+        shouldConvertAsJsonWithoutMetadata(ApiVersion.V_1_25, "1_25");
     }
 
 
-    private void shouldConvertAsJsonForExport(ApiSerializer.Version version, String filename) throws IOException {
+    private void shouldConvertAsJsonForExport(ApiVersion version, String filename) throws IOException, JSONException, JSONException {
         String jsonForExport = apiService.exportAsJson(API_ID, version.getVersion(), SystemRole.PRIMARY_OWNER.name());
 
         URL url = Resources.getResource("io/gravitee/rest/api/management/service/export-convertAsJsonForExport" + (filename != null ? "-" + filename : "") + ".json");
         String expectedJson = Resources.toString(url, Charsets.UTF_8);
 
         assertThat(jsonForExport).isNotNull();
-        assertThat(objectMapper.readTree(expectedJson)).isEqualTo(objectMapper.readTree(jsonForExport));
+        JSONAssert.assertEquals(expectedJson, jsonForExport, JSONCompareMode.STRICT);
     }
 
-    private void shouldConvertAsJsonWithoutMembers(ApiSerializer.Version version, String filename) throws IOException {
+    private void shouldConvertAsJsonWithoutMembers(ApiVersion version, String filename) throws IOException, JSONException {
         String jsonForExport = apiService.exportAsJson(API_ID, version.getVersion(), SystemRole.PRIMARY_OWNER.name(), "members");
 
         URL url = Resources.getResource("io/gravitee/rest/api/management/service/export-convertAsJsonForExportWithoutMembers" + (filename != null ? "-" + filename : "") + ".json");
         String expectedJson = Resources.toString(url, Charsets.UTF_8);
 
         assertThat(jsonForExport).isNotNull();
-        assertThat(objectMapper.readTree(expectedJson)).isEqualTo(objectMapper.readTree(jsonForExport));
+        JSONAssert.assertEquals(expectedJson, jsonForExport, JSONCompareMode.STRICT);
     }
 
-    private void shouldConvertAsJsonWithoutPages(ApiSerializer.Version version, String filename) throws IOException {
+    private void shouldConvertAsJsonWithoutPages(ApiVersion version, String filename) throws IOException, JSONException {
         String jsonForExport = apiService.exportAsJson(API_ID, version.getVersion(), SystemRole.PRIMARY_OWNER.name(), "pages");
 
         URL url = Resources.getResource("io/gravitee/rest/api/management/service/export-convertAsJsonForExportWithoutPages" + (filename != null ? "-" + filename : "") + ".json");
         String expectedJson = Resources.toString(url, Charsets.UTF_8);
 
         assertThat(jsonForExport).isNotNull();
-        assertThat(objectMapper.readTree(expectedJson)).isEqualTo(objectMapper.readTree(jsonForExport));
+        JSONAssert.assertEquals(expectedJson, jsonForExport, JSONCompareMode.STRICT);
     }
 
-    private void shouldConvertAsJsonWithoutPlans(ApiSerializer.Version version, String filename) throws IOException {
+    private void shouldConvertAsJsonWithoutPlans(ApiVersion version, String filename) throws IOException, JSONException {
         String jsonForExport = apiService.exportAsJson(API_ID, version.getVersion(), SystemRole.PRIMARY_OWNER.name(), "plans");
 
         URL url = Resources.getResource("io/gravitee/rest/api/management/service/export-convertAsJsonForExportWithoutPlans" + (filename != null ? "-" + filename : "") + ".json");
         String expectedJson = Resources.toString(url, Charsets.UTF_8);
 
         assertThat(jsonForExport).isNotNull();
-        assertThat(objectMapper.readTree(expectedJson)).isEqualTo(objectMapper.readTree(jsonForExport));
+        JSONAssert.assertEquals(expectedJson, jsonForExport, JSONCompareMode.STRICT);
     }
 
-    private void shouldConvertAsJsonWithoutMetadata(ApiSerializer.Version version, String filename) throws IOException {
+    private void shouldConvertAsJsonWithoutMetadata(ApiVersion version, String filename) throws IOException, JSONException {
         String jsonForExport = apiService.exportAsJson(API_ID, version.getVersion(), SystemRole.PRIMARY_OWNER.name(), "metadata");
 
         URL url = Resources.getResource("io/gravitee/rest/api/management/service/export-convertAsJsonForExportWithoutMetadata" + (filename != null ? "-" + filename : "") + ".json");
         String expectedJson = Resources.toString(url, Charsets.UTF_8);
 
         assertThat(jsonForExport).isNotNull();
-        assertThat(objectMapper.readTree(expectedJson)).isEqualTo(objectMapper.readTree(jsonForExport));
+        JSONAssert.assertEquals(expectedJson, jsonForExport, JSONCompareMode.STRICT);
     }
 }

@@ -13,23 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.gravitee.rest.api.service.jackson.ser.api;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Stream;
+package io.gravitee.rest.api.service.jackson.ser.api.v1_15;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.gravitee.definition.model.Rule;
+import io.gravitee.rest.api.model.*;
 
-import io.gravitee.definition.model.Path;
-import io.gravitee.rest.api.model.PlanEntity;
-import io.gravitee.rest.api.model.PlanSecurityType;
-import io.gravitee.rest.api.model.PlanStatus;
-import io.gravitee.rest.api.model.PlanType;
-import io.gravitee.rest.api.model.PlanValidationType;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * @author Florent CHAMFROY (florent.chamfroy at graviteesource.com)
@@ -58,8 +49,8 @@ public class PlanEntityBefore_3_00 {
     
     @JsonProperty("closed_at")
     private Date closedAt;
-    
-    private Map<String, Path> paths = new HashMap<>();
+
+    private Map<String, List<Rule>> paths = new HashMap<>();
     
     private List<String> characteristics;
     
@@ -146,23 +137,27 @@ public class PlanEntityBefore_3_00 {
         oldPlanEntity.setSelectionRule(planEntity.getSelectionRule());
         return oldPlanEntity;
     }
-    
+
     public String[] getApis() {
         return apis;
     }
-    
+
     public void setApis(String[] apis) {
         this.apis = apis;
     }
-    
+
+    public void setApi(String api) {
+        this.apis = new String[]{api};
+    }
+
     public Date getCreatedAt() {
         return createdAt;
     }
-    
+
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
-    
+
     public Date getUpdatedAt() {
         return updatedAt;
     }
@@ -170,12 +165,12 @@ public class PlanEntityBefore_3_00 {
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
     }
-    
-    public Map<String, Path> getPaths() {
+
+    public Map<String, List<Rule>> getPaths() {
         return paths;
     }
-    
-    public void setPaths(Map<String, Path> paths) {
+
+    public void setPaths(Map<String, List<Rule>> paths) {
         this.paths = paths;
     }
     

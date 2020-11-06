@@ -15,11 +15,13 @@
  */
 package io.gravitee.rest.api.model.api;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.gravitee.definition.model.Path;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.gravitee.definition.model.Properties;
-import io.gravitee.definition.model.Proxy;
-import io.gravitee.definition.model.ResponseTemplates;
+import io.gravitee.definition.model.*;
 import io.gravitee.definition.model.plugins.resources.Resource;
 import io.gravitee.definition.model.services.Services;
 import io.gravitee.rest.api.model.ApiMetadataEntity;
@@ -55,7 +57,7 @@ public class UpdateApiEntity {
 
     @JsonProperty(value = "paths", required = true)
     @Schema(description = "a map where you can associate a path to a configuration (the policies configuration)")
-    private Map<String, Path> paths = new HashMap<>();
+    private Map<String, List<Rule>> paths = new LinkedHashMap<>();
 
     @Schema(description = "The configuration of API services like the dynamic properties, the endpoint discovery or the healthcheck.")
     private Services services;
@@ -96,7 +98,7 @@ public class UpdateApiEntity {
 
     @JsonProperty(value = "response_templates")
     @Schema(description = "A map that allows you to configure the output of a request based on the event throws by the gateway. Example : Quota exceeded, api-ky is missing, ...")
-    private Map<String, ResponseTemplates> responseTemplates;
+    private Map<String, Map<String, ResponseTemplate>> responseTemplates;
 
     private List<ApiMetadataEntity> metadata;
 
@@ -147,13 +149,19 @@ public class UpdateApiEntity {
 
     public void setProxy(Proxy proxy) {
         this.proxy = proxy;
+        if (proxy.getGroups() == null && proxy.getCommonEndpointSettings() != null) {
+            EndpointGroup group = new EndpointGroup();
+            group.setName("default-group");
+            group.setEndpoints(proxy.getCommonEndpointSettings().getEndpoints());
+            proxy.setGroups(Collections.singleton(group));
+        }
     }
 
-    public Map<String, Path> getPaths() {
+    public Map<String, List<Rule>> getPaths() {
         return paths;
     }
 
-    public void setPaths(Map<String, Path> paths) {
+    public void setPaths(Map<String, List<Rule>> paths) {
         this.paths = paths;
     }
 
@@ -165,12 +173,30 @@ public class UpdateApiEntity {
         this.services = services;
     }
 
+    @JsonIgnore
     public Properties getProperties() {
         return properties;
     }
 
+    @JsonIgnore
     public void setProperties(Properties properties) {
         this.properties = properties;
+    }
+
+    @JsonSetter("properties")
+    @JsonDeserialize(using = PropertiesDeserializer.class)
+    public void setPropertyList(List<Property> properties) {
+        this.properties = new Properties();
+        this.properties.setProperties(properties);
+    }
+
+    @Schema(description = "A list of properties available in the API context.")
+    @JsonGetter("properties")
+    public List<Property> getPropertyList() {
+        if (properties != null) {
+            return properties.getProperties();
+        }
+        return null;
     }
 
     public Set<String> getTags() {
@@ -229,11 +255,11 @@ public class UpdateApiEntity {
         this.pathMappings = pathMappings;
     }
 
-    public Map<String, ResponseTemplates> getResponseTemplates() {
+    public Map<String, Map<String, ResponseTemplate>> getResponseTemplates() {
         return responseTemplates;
     }
 
-    public void setResponseTemplates(Map<String, ResponseTemplates> responseTemplates) {
+    public void setResponseTemplates(Map<String, Map<String, ResponseTemplate>> responseTemplates) {
         this.responseTemplates = responseTemplates;
     }
 

@@ -28,10 +28,10 @@ import io.gravitee.rest.api.portal.rest.model.Api;
 import io.gravitee.rest.api.portal.rest.model.ApiLinks;
 import io.gravitee.rest.api.portal.rest.model.RatingSummary;
 import io.gravitee.rest.api.portal.rest.model.User;
+import io.gravitee.rest.api.service.CategoryService;
 import io.gravitee.rest.api.service.ParameterService;
 import io.gravitee.rest.api.service.RatingService;
 import io.gravitee.rest.api.service.SubscriptionService;
-import io.gravitee.rest.api.service.CategoryService;
 import io.gravitee.rest.api.service.exceptions.CategoryNotFoundException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -103,9 +103,6 @@ public class ApiMapperTest {
         apiEntity.setEntrypoints(
                 Arrays.asList(new ApiEntrypointEntity(API_ENTRYPOINT_1), new ApiEntrypointEntity(API + "/foo")));
 
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("meta", API);
-        apiEntity.setMetadata(metadata);
         apiEntity.setVersion(API_VERSION);
 
         UserEntity ownerEntity = new UserEntity();

@@ -17,7 +17,6 @@ package io.gravitee.rest.api.service.spring;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.github.fge.jsonschema.cfg.ValidationConfiguration;
@@ -37,14 +36,11 @@ import io.gravitee.plugin.notifier.spring.NotifierPluginConfiguration;
 import io.gravitee.plugin.policy.spring.PolicyPluginConfiguration;
 import io.gravitee.plugin.resource.spring.ResourcePluginConfiguration;
 import io.gravitee.rest.api.fetcher.spring.FetcherConfigurationConfiguration;
-import io.gravitee.rest.api.model.api.ApiEntity;
 import io.gravitee.rest.api.service.PasswordValidator;
 import io.gravitee.rest.api.service.impl.search.configuration.SearchEngineConfiguration;
 import io.gravitee.rest.api.service.impl.swagger.policy.PolicyOperationVisitorManager;
 import io.gravitee.rest.api.service.impl.swagger.policy.impl.PolicyOperationVisitorManagerImpl;
 import io.gravitee.rest.api.service.jackson.filter.ApiPermissionFilter;
-import io.gravitee.rest.api.service.jackson.ser.api.ApiCompositeSerializer;
-import io.gravitee.rest.api.service.jackson.ser.api.ApiSerializer;
 import io.gravitee.rest.api.service.quality.ApiQualityMetricLoader;
 import io.gravitee.rest.api.service.validator.RegexPasswordValidator;
 import io.gravitee.rest.api.service.validator.jsonschema.JavaRegexFormatAttribute;
@@ -83,22 +79,12 @@ public class ServiceConfiguration {
 		PropertyFilter apiMembershipTypeFilter = new ApiPermissionFilter();
 		objectMapper.setFilterProvider(new SimpleFilterProvider(Collections.singletonMap("apiMembershipTypeFilter", apiMembershipTypeFilter)));
 		objectMapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
-		// register API serializer
-		SimpleModule module = new SimpleModule();
-		module.addSerializer(ApiEntity.class, apiSerializer());
-
-		objectMapper.registerModule(module);
 		return objectMapper;
 	}
 
 	@Bean
 	public ApiQualityMetricLoader apiQualityMetricLoader() {
 		return new ApiQualityMetricLoader();
-	}
-
-	@Bean
-	public ApiSerializer apiSerializer() {
-		return new ApiCompositeSerializer();
 	}
 
 	@Bean

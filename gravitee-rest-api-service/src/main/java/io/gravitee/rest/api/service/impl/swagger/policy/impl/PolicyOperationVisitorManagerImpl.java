@@ -15,11 +15,11 @@
  */
 package io.gravitee.rest.api.service.impl.swagger.policy.impl;
 
+import io.gravitee.policy.api.swagger.Policy;
 import io.gravitee.rest.api.service.impl.swagger.policy.PolicyOperationVisitor;
 import io.gravitee.rest.api.service.impl.swagger.policy.PolicyOperationVisitorManager;
 import io.gravitee.rest.api.service.impl.swagger.visitor.v2.SwaggerOperationVisitor;
 import io.gravitee.rest.api.service.impl.swagger.visitor.v3.OAIOperationVisitor;
-import io.gravitee.policy.api.swagger.Policy;
 
 import java.util.*;
 
@@ -31,19 +31,19 @@ public class PolicyOperationVisitorManagerImpl implements PolicyOperationVisitor
 
     private final List<PolicyOperationVisitor> policyVisitors = new ArrayList<>();
 
-    private final Map<String, SwaggerOperationVisitor> swaggerOperationVisitors = new HashMap<>();
-    private final Map<String, OAIOperationVisitor> oaiOperationVisitors = new HashMap<>();
+    private final Map<String, SwaggerOperationVisitor<Optional<Policy>>> swaggerOperationVisitors = new HashMap<>();
+    private final Map<String, OAIOperationVisitor<Optional<Policy>>> oaiOperationVisitors = new HashMap<>();
 
     @Override
     public void add(PolicyOperationVisitor visitor) {
         policyVisitors.add(visitor);
         if (visitor.getOaiOperationVisitor() != null) {
-            oaiOperationVisitors.put(visitor.getId(), (OAIOperationVisitor<Optional<Policy>>) (descriptor, operation) ->
+            oaiOperationVisitors.put(visitor.getId(), (descriptor, operation) ->
                     visitor.getOaiOperationVisitor().visit(descriptor, operation));
         }
 
         if (visitor.getSwaggerOperationVisitor() != null) {
-            swaggerOperationVisitors.put(visitor.getId(), (SwaggerOperationVisitor<Optional<Policy>>) (descriptor, operation) ->
+            swaggerOperationVisitors.put(visitor.getId(), (descriptor, operation) ->
                     visitor.getSwaggerOperationVisitor().visit(descriptor, operation));
         }
     }
@@ -54,12 +54,12 @@ public class PolicyOperationVisitorManagerImpl implements PolicyOperationVisitor
     }
 
     @Override
-    public SwaggerOperationVisitor getSwaggerOperationVisitor(String policy) {
+    public SwaggerOperationVisitor<Optional<Policy>> getSwaggerOperationVisitor(String policy) {
         return swaggerOperationVisitors.get(policy);
     }
 
     @Override
-    public OAIOperationVisitor getOAIOperationVisitor(String policy) {
+    public OAIOperationVisitor<Optional<Policy>> getOAIOperationVisitor(String policy) {
         return oaiOperationVisitors.get(policy);
     }
 }

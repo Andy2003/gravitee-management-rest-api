@@ -15,6 +15,7 @@
  */
 package io.gravitee.rest.api.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import io.gravitee.definition.model.Policy;
 import io.gravitee.plugin.core.api.ConfigurablePluginManager;
@@ -22,22 +23,17 @@ import io.gravitee.plugin.core.api.PluginManifest;
 import io.gravitee.plugin.policy.PolicyPlugin;
 import io.gravitee.repository.exceptions.TechnicalException;
 import io.gravitee.rest.api.model.PolicyEntity;
-import io.gravitee.rest.api.service.PolicyService;
 import io.gravitee.rest.api.service.exceptions.InvalidDataException;
 import io.gravitee.rest.api.service.impl.PolicyServiceImpl;
-
 import io.gravitee.rest.api.service.spring.ServiceConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.reflections.ReflectionUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
@@ -149,7 +145,7 @@ public class PolicyServiceTest {
 
         Policy policy = new Policy();
         policy.setName("my-policy");
-        policy.setConfiguration(null);
+        policy.setConfiguration((JsonNode) null);
 
         policyService.validatePolicyConfiguration(policy);
     }

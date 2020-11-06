@@ -15,10 +15,12 @@
  */
 package io.gravitee.rest.api.service.impl.swagger.policy;
 
+import io.gravitee.policy.api.swagger.Policy;
 import io.gravitee.rest.api.service.impl.swagger.visitor.v2.SwaggerOperationVisitor;
 import io.gravitee.rest.api.service.impl.swagger.visitor.v3.OAIOperationVisitor;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author David BRASSELY (david.brassely at graviteesource.com)
@@ -30,7 +32,7 @@ public interface PolicyOperationVisitorManager {
 
     List<PolicyOperationVisitor> getPolicyVisitors();
 
-    SwaggerOperationVisitor getSwaggerOperationVisitor(String policy);
+    SwaggerOperationVisitor<Optional<Policy>> getSwaggerOperationVisitor(String policy);
 
-    OAIOperationVisitor getOAIOperationVisitor(String policy);
+    OAIOperationVisitor<Optional<Policy>> getOAIOperationVisitor(String policy);
 }

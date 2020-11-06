@@ -220,14 +220,13 @@ public class VirtualHostServiceTest {
     }
 
     private Api createMock(String api, String path, String host) {
-        Api api1 = mock(Api.class);
-        when(api1.getId()).thenReturn(api);
+        Api api1 = new Api();
+        api1.setId(api);
         if (host == null) {
-            when(api1.getDefinition()).thenReturn("{\"id\": \"" + api + "\",\"name\": \"API 1\",\"proxy\": {\"context_path\": \"" + path + "\"}}");
+            api1.setDefinition("{\"id\": \"" + api + "\",\"name\": \"API 1\",\"proxy\": {\"context_path\": \"" + path + "\"}}");
         } else {
-            when(api1.getDefinition()).thenReturn("{\"id\": \"" + api + "\",\"name\": \"API 1\",\"proxy\": {\"virtual_hosts\": [{\"host\": \"api.gravitee.io\", \"path\": \"" + path + "\"}]}}");
+            api1.setDefinition("{\"id\": \"" + api + "\",\"name\": \"API 1\",\"proxy\": {\"virtual_hosts\": [{\"host\": \"api.gravitee.io\", \"path\": \"" + path + "\"}]}}");
         }
-
         return api1;
     }
 

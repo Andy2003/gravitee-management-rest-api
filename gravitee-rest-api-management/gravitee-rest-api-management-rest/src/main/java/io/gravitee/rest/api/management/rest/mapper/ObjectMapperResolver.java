@@ -15,20 +15,15 @@
  */
 package io.gravitee.rest.api.management.rest.mapper;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.gravitee.definition.jackson.datatype.GraviteeMapper;
 import io.gravitee.rest.api.service.jackson.filter.ApiPermissionFilter;
 
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
-import java.io.IOException;
 import java.util.Collections;
 
 /**
@@ -48,30 +43,6 @@ public class ObjectMapperResolver implements ContextResolver<ObjectMapper> {
 
         // register filter provider
         registerFilterProvider();
-
-        SimpleModule module = new SimpleModule();
-        module.setDeserializerModifier(new BeanDeserializerModifier() {
-            @Override
-            public JsonDeserializer<Enum> modifyEnumDeserializer(DeserializationConfig config,
-                                                                 final JavaType type,
-                                                                 BeanDescription beanDesc,
-                                                                 final JsonDeserializer<?> deserializer) {
-                return new JsonDeserializer<Enum>() {
-                    @Override
-                    public Enum deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-                        Class<? extends Enum> rawClass = (Class<Enum<?>>) type.getRawClass();
-                        return Enum.valueOf(rawClass, jp.getValueAsString().toUpperCase());
-                    }
-                };
-            }
-        });
-        module.addSerializer(Enum.class, new StdSerializer<Enum>(Enum.class) {
-            @Override
-            public void serialize(Enum value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
-                jgen.writeString(value.name().toLowerCase());
-            }
-        });
-        mapper.registerModule(module);
     }
 
     @Override

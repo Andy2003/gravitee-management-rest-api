@@ -15,14 +15,11 @@
  */
 package io.gravitee.rest.api.model.api;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.gravitee.common.component.Lifecycle;
-import io.gravitee.definition.model.Path;
 import io.gravitee.definition.model.Properties;
-import io.gravitee.definition.model.Proxy;
-import io.gravitee.definition.model.ResponseTemplates;
+import io.gravitee.definition.model.*;
 import io.gravitee.definition.model.plugins.resources.Resource;
 import io.gravitee.definition.model.services.Services;
 import io.gravitee.rest.api.model.DeploymentRequired;
@@ -37,13 +34,6 @@ import javax.validation.constraints.NotNull;
 import java.util.*;
 
 /**
- * --------------------------------------------------------------------------------------------------------------
- * --------------------------------------------------------------------------------------------------------------
- * /!\ Do not forget to update {@see io.gravitee.rest.api.service.jackson.ser.api.ApiDefaultSerializer}
- * for each modification of the ApiEntity class to apply export API changes /!\
- * --------------------------------------------------------------------------------------------------------------
- * --------------------------------------------------------------------------------------------------------------
- *
  * @author David BRASSELY (david.brassely at graviteesource.com)
  * @author Nicolas GERAUD (nicolas.geraud at graviteesource.com)
  * @author Azize ELAMRANI (azize.elamrani at graviteesource.com)
@@ -79,7 +69,7 @@ public class ApiEntity implements Indexable, FilterableItem {
     @DeploymentRequired
     @JsonProperty(value = "paths", required = true)
     @Schema(description = "a map where you can associate a path to a configuration (the policies configuration)")
-    private Map<String, Path> paths = new HashMap<>();
+    private Map<String, List<Rule>> paths = new LinkedHashMap<>();
 
     @JsonProperty("deployed_at")
     @Schema(description = "The last date (as timestamp) when the API was deployed.", example = "1581256457163")
@@ -106,7 +96,7 @@ public class ApiEntity implements Indexable, FilterableItem {
     @DeploymentRequired
     @JsonProperty(value = "properties")
     @Schema(description = "A dictionary (could be dynamic) of properties available in the API context.")
-    private io.gravitee.definition.model.Properties properties;
+    private Properties properties;
 
     @DeploymentRequired
     @JsonProperty(value = "services")
@@ -140,13 +130,10 @@ public class ApiEntity implements Indexable, FilterableItem {
     @Schema(description = "A list of paths used to aggregate data in analytics", example = "/products/:productId, /products/:productId/media")
     private Set<String> pathMappings = new HashSet<>();
 
-    @JsonIgnore
-    private Map<String, Object> metadata = new HashMap<>();
-
     @DeploymentRequired
     @JsonProperty(value = "response_templates")
     @Schema(description = "A map that allows you to configure the output of a request based on the event throws by the gateway. Example : Quota exceeded, api-ky is missing, ...")
-    private Map<String, ResponseTemplates> responseTemplates;
+    private Map<String, Map<String, ResponseTemplate>> responseTemplates;
 
     @JsonProperty(value = "lifecycle_state")
     private ApiLifecycleState lifecycleState;
@@ -238,11 +225,11 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.proxy = proxy;
     }
 
-    public Map<String, Path> getPaths() {
+    public Map<String, List<Rule>> getPaths() {
         return paths;
     }
 
-    public void setPaths(Map<String, Path> paths) {
+    public void setPaths(Map<String, List<Rule>> paths) {
         this.paths = paths;
     }
 
@@ -262,12 +249,30 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.services = services;
     }
 
+    @JsonIgnore
     public Properties getProperties() {
         return properties;
     }
 
+    @JsonIgnore
     public void setProperties(Properties properties) {
         this.properties = properties;
+    }
+
+    @JsonSetter("properties")
+    @JsonDeserialize(using = PropertiesDeserializer.class)
+    public void setPropertyList(List<Property> properties) {
+        this.properties = new Properties();
+        this.properties.setProperties(properties);
+    }
+
+    @Schema(description = "A list of properties available in the API context.")
+    @JsonGetter("properties")
+    public List<Property> getPropertyList() {
+        if (properties != null) {
+            return properties.getProperties();
+        }
+        return null;
     }
 
     public Set<String> getTags() {
@@ -342,19 +347,11 @@ public class ApiEntity implements Indexable, FilterableItem {
         this.pathMappings = pathMappings;
     }
 
-    public Map<String, Object> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(Map<String, Object> metadata) {
-        this.metadata = metadata;
-    }
-
-    public Map<String, ResponseTemplates> getResponseTemplates() {
+    public Map<String, Map<String, ResponseTemplate>> getResponseTemplates() {
         return responseTemplates;
     }
 
-    public void setResponseTemplates(Map<String, ResponseTemplates> responseTemplates) {
+    public void setResponseTemplates(Map<String, Map<String, ResponseTemplate>> responseTemplates) {
         this.responseTemplates = responseTemplates;
     }
 

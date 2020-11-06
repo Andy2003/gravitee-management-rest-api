@@ -16,7 +16,6 @@
 package io.gravitee.rest.api.portal.rest.mapper;
 
 import io.gravitee.common.http.HttpMethod;
-import io.gravitee.definition.model.Path;
 import io.gravitee.definition.model.Policy;
 import io.gravitee.definition.model.Rule;
 import io.gravitee.rest.api.model.*;
@@ -70,39 +69,36 @@ public class PlanMapperTest {
         planEntity = new PlanEntity();
        
         planEntity.setApi(PLAN_API);
-        planEntity.setCharacteristics(Arrays.asList(PLAN_CHARACTERISTIC));
+        planEntity.setCharacteristics(Collections.singletonList(PLAN_CHARACTERISTIC));
         planEntity.setClosedAt(nowDate);
         planEntity.setCommentMessage(PLAN_COMMENT_MESSAGE);
         planEntity.setCommentRequired(true);
         planEntity.setCreatedAt(nowDate);
         planEntity.setDescription(PLAN_DESCRIPTION);
-        planEntity.setExcludedGroups(Arrays.asList(PLAN_GROUP));
+        planEntity.setExcludedGroups(Collections.singletonList(PLAN_GROUP));
         planEntity.setId(PLAN_ID);
         planEntity.setName(PLAN_NAME);
         planEntity.setNeedRedeployAt(nowDate);
         planEntity.setOrder(1);
-        
+
         Policy policy = new Policy();
         policy.setConfiguration(PLAN_RULE_POLICY_CONFIGURATION);
         policy.setName(PLAN_RULE_POLICY_NAME);
         Rule rule = new Rule();
         rule.setDescription(PLAN_RULE_DESCRIPTION);
         rule.setEnabled(true);
-        rule.setMethods(new HashSet<HttpMethod>(Arrays.asList(HttpMethod.GET)));
+        rule.setMethods(new HashSet<>(Collections.singletonList(HttpMethod.GET)));
         rule.setPolicy(policy);
-        Path path = new Path();
-        path.setPath(PLAN_PATH);
-        path.setRules(Arrays.asList(rule));
-        Map<String, Path> paths = new HashMap<>();
-        paths.put(PLAN_ID, path);
+        Map<String, List<Rule>> paths = new HashMap<>();
+        paths.put(PLAN_PATH, Collections.singletonList(rule));
         planEntity.setPaths(paths);
-        
+
         planEntity.setPublishedAt(nowDate);
         planEntity.setSecurity(PlanSecurityType.API_KEY);
         planEntity.setSecurityDefinition(PLAN_SECURITY_DEFINITINON);
         planEntity.setSelectionRule(PLAN_SELECTION_RULE);
         planEntity.setStatus(PlanStatus.PUBLISHED);
-        planEntity.setTags(new HashSet<String>(Arrays.asList(PLAN_TAG)));
+        planEntity.setTags(new HashSet<>(Collections.singletonList(PLAN_TAG)));
         planEntity.setType(PlanType.API);
         planEntity.setUpdatedAt(nowDate);
         planEntity.setValidation(PlanValidationType.AUTO);

@@ -16,7 +16,6 @@
 package io.gravitee.rest.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.google.common.base.Charsets;
@@ -31,12 +30,13 @@ import io.gravitee.repository.management.api.ApiRepository;
 import io.gravitee.repository.management.api.MembershipRepository;
 import io.gravitee.repository.management.model.Api;
 import io.gravitee.rest.api.model.*;
-import io.gravitee.rest.api.model.api.ApiEntity;
 import io.gravitee.rest.api.model.parameters.Key;
 import io.gravitee.rest.api.model.permissions.SystemRole;
 import io.gravitee.rest.api.service.impl.ApiServiceImpl;
 import io.gravitee.rest.api.service.jackson.filter.ApiPermissionFilter;
-import io.gravitee.rest.api.service.jackson.ser.api.*;
+import io.gravitee.rest.api.service.jackson.ser.ApiMapper;
+import io.gravitee.rest.api.service.jackson.ser.ApiMapperImpl;
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,6 +45,8 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.internal.util.collections.Sets;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
@@ -94,6 +96,8 @@ public class ApiService_gRPC_ExportAsJsonTest {
     private ApiMetadataService apiMetadataService;
     @Mock
     private MediaService mediaService;
+    @Spy
+    private ApiMapper apiMapper = new ApiMapperImpl();
 
     @Before
     public void setUp() throws TechnicalException {
@@ -101,35 +105,6 @@ public class ApiService_gRPC_ExportAsJsonTest {
         objectMapper.setFilterProvider(new SimpleFilterProvider(Collections.singletonMap("apiMembershipTypeFilter", apiMembershipTypeFilter)));
 
         when(parameterService.find(Key.PORTAL_ENTRYPOINT)).thenReturn(Key.PORTAL_ENTRYPOINT.defaultValue());
-        // register API Entity serializers
-        when(applicationContext.getBean(MembershipService.class)).thenReturn(membershipService);
-        when(applicationContext.getBean(PlanService.class)).thenReturn(planService);
-        when(applicationContext.getBean(PageService.class)).thenReturn(pageService);
-        when(applicationContext.getBean(GroupService.class)).thenReturn(groupService);
-        when(applicationContext.getBean(UserService.class)).thenReturn(userService);
-        when(applicationContext.getBean(ApiMetadataService.class)).thenReturn(apiMetadataService);
-        when(applicationContext.getBean(MediaService.class)).thenReturn(mediaService);
-        ApiCompositeSerializer apiCompositeSerializer = new ApiCompositeSerializer();
-        ApiSerializer apiDefaultSerializer = new ApiDefaultSerializer();
-        apiDefaultSerializer.setApplicationContext(applicationContext);
-
-        //V_1_15
-        ApiSerializer apiPrior115VersionSerializer = new Api1_15VersionSerializer();
-        apiPrior115VersionSerializer.setApplicationContext(applicationContext);
-        //V_1_20
-        ApiSerializer apiPrior120VersionSerializer = new Api1_20VersionSerializer();
-        apiPrior120VersionSerializer.setApplicationContext(applicationContext);
-        //V_1_25
-        ApiSerializer apiPrior125VersionSerializer = new Api1_25VersionSerializer();
-        apiPrior125VersionSerializer.setApplicationContext(applicationContext);
-        //V_3_0
-        ApiSerializer apiPrior30VersionSerializer = new Api3_0VersionSerializer();
-        apiPrior30VersionSerializer.setApplicationContext(applicationContext);
-
-        apiCompositeSerializer.setSerializers(Arrays.asList(apiDefaultSerializer, apiPrior115VersionSerializer, apiPrior120VersionSerializer, apiPrior125VersionSerializer, apiPrior30VersionSerializer));
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(ApiEntity.class, apiCompositeSerializer);
-        objectMapper.registerModule(module);
 
         Api api = new Api();
         api.setId(API_ID);
@@ -161,11 +136,11 @@ public class ApiService_gRPC_ExportAsJsonTest {
             io.gravitee.definition.model.Api apiDefinition = new io.gravitee.definition.model.Api();
             apiDefinition.setPaths(Collections.emptyMap());
             apiDefinition.setProxy(proxy);
-            ResponseTemplates responseTemplates = new ResponseTemplates();
+            Map<String, ResponseTemplate> responseTemplates = new LinkedHashMap<>();
             ResponseTemplate responseTemplate = new ResponseTemplate();
             responseTemplate.setStatusCode(400);
             responseTemplate.setBody("{\"bad\":\"news\"}");
-            responseTemplates.setTemplates(Collections.singletonMap("*/*", responseTemplate));
+            responseTemplates.put("*/*", responseTemplate);
             apiDefinition.setResponseTemplates(Collections.singletonMap("API_KEY_MISSING", responseTemplates));
             String definition = objectMapper.writeValueAsString(apiDefinition);
             api.setDefinition(definition);
@@ -220,9 +195,7 @@ public class ApiService_gRPC_ExportAsJsonTest {
         publishedPlan.setSecurity(PlanSecurityType.API_KEY);
         publishedPlan.setValidation(PlanValidationType.AUTO);
         publishedPlan.setStatus(PlanStatus.PUBLISHED);
-        Map<String, Path> paths = new HashMap<>();
-        Path path = new Path();
-        path.setPath("/");
+        Map<String, List<Rule>> paths = new HashMap<>();
         Rule rule = new Rule();
         rule.setEnabled(true);
         rule.setMethods(Sets.newSet(HttpMethod.GET));
@@ -237,8 +210,7 @@ public class ApiService_gRPC_ExportAsJsonTest {
                 "          }" + ls +
                 "        }");
         rule.setPolicy(policy);
-        path.setRules(Collections.singletonList(rule));
-        paths.put("/", path);
+        paths.put("/", Collections.singletonList(rule));
         publishedPlan.setPaths(paths);
         PlanEntity closedPlan = new PlanEntity();
         closedPlan.setId("closedPlan-id");
@@ -264,37 +236,37 @@ public class ApiService_gRPC_ExportAsJsonTest {
     }
 
     @Test
-    public void shouldConvertAsJsonForExport() throws TechnicalException, IOException {
-        shouldConvertAsJsonForExport(ApiSerializer.Version.DEFAULT, null);
+    public void shouldConvertAsJsonForExport() throws TechnicalException, IOException, JSONException {
+        shouldConvertAsJsonForExport(ApiVersion.DEFAULT, null);
     }
 
     @Test
-    public void shouldConvertAsJsonForExport_3_0() throws TechnicalException, IOException {
-        shouldConvertAsJsonForExport(ApiSerializer.Version.V_3_0, "3_0");
+    public void shouldConvertAsJsonForExport_3_0() throws TechnicalException, IOException, JSONException {
+        shouldConvertAsJsonForExport(ApiVersion.V_3_0, "3_0");
     }
 
     @Test
-    public void shouldConvertAsJsonForExport_1_15() throws TechnicalException, IOException {
-        shouldConvertAsJsonForExport(ApiSerializer.Version.V_1_15, "1_15");
+    public void shouldConvertAsJsonForExport_1_15() throws TechnicalException, IOException, JSONException {
+        shouldConvertAsJsonForExport(ApiVersion.V_1_15, "1_15");
     }
 
     @Test
-    public void shouldConvertAsJsonForExport_1_20() throws TechnicalException, IOException {
-        shouldConvertAsJsonForExport(ApiSerializer.Version.V_1_20, "1_20");
+    public void shouldConvertAsJsonForExport_1_20() throws TechnicalException, IOException, JSONException {
+        shouldConvertAsJsonForExport(ApiVersion.V_1_20, "1_20");
     }
 
     @Test
-    public void shouldConvertAsJsonForExport_1_25() throws TechnicalException, IOException {
-        shouldConvertAsJsonForExport(ApiSerializer.Version.V_1_25, "1_25");
+    public void shouldConvertAsJsonForExport_1_25() throws TechnicalException, IOException, JSONException {
+        shouldConvertAsJsonForExport(ApiVersion.V_1_25, "1_25");
     }
 
-    private void shouldConvertAsJsonForExport(ApiSerializer.Version version, String filename) throws TechnicalException, IOException {
+    private void shouldConvertAsJsonForExport(ApiVersion version, String filename) throws IOException, JSONException {
         String jsonForExport = apiService.exportAsJson(API_ID, version.getVersion(), SystemRole.PRIMARY_OWNER.name());
 
         URL url = Resources.getResource("io/gravitee/rest/api/management/service/export-gRPC-convertAsJsonForExport" + (filename != null ? "-" + filename : "") + ".json");
         String expectedJson = Resources.toString(url, Charsets.UTF_8);
 
         assertThat(jsonForExport).isNotNull();
-        assertThat(objectMapper.readTree(expectedJson)).isEqualTo(objectMapper.readTree(jsonForExport));
+        JSONAssert.assertEquals(expectedJson, jsonForExport, JSONCompareMode.STRICT);
     }
 }
