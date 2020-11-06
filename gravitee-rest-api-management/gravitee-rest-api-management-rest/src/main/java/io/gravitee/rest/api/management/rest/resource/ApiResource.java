@@ -416,6 +416,7 @@ public class ApiResource extends AbstractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Deprecated, use PUT method instead. Update the API with an existing Swagger descriptor",
+            deprecated = true,
             description = "User must have the MANAGE_API permission to use this service")
     @ApiResponse(responseCode = "200", description = "API successfully updated from Swagger descriptor", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ApiEntity.class)))
     @ApiResponse(responseCode = "500", description = "Internal server error")

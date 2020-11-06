@@ -264,7 +264,9 @@ public class ApiPlansResource extends AbstractResource {
     @Deprecated
     @Path("/{plan}/_depreciate")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Deprecated, use '_deprecate' instead. Deprecate a plan", description = "User must have the API_PLAN[UPDATE] permission to use this service")
+    @Operation(summary = "Deprecated, use '_deprecate' instead. Deprecate a plan",
+            deprecated = true,
+            description = "User must have the API_PLAN[UPDATE] permission to use this service")
     @ApiResponse(responseCode = "204", description = "Plan successfully deprecated",
             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PlanEntity.class)))
     @ApiResponse(responseCode = "500", description = "Internal server error")
@@ -281,6 +283,7 @@ public class ApiPlansResource extends AbstractResource {
     @Path("/{plan}/_deprecate")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Deprecate a plan",
+            deprecated = true,
             description = "User must have the API_PLAN[UPDATE] permission to use this service")
     @ApiResponse(responseCode = "204", description = "Plan successfully deprecated",
             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PlanEntity.class)))
