@@ -15,9 +15,10 @@
  */
 package io.gravitee.rest.api.service.jackson.ser.api.v3_0;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.gravitee.definition.model.ResponseTemplate;
-import io.gravitee.rest.api.model.PlanEntity;
+import io.gravitee.definition.model.Rule;
 import io.gravitee.rest.api.service.jackson.ser.api.common.BaseApiExport;
 
 import java.util.*;
@@ -37,4 +38,32 @@ public class ApiV3_0 extends BaseApiExport {
         public List<String> roles;
     }
 
+    public static class PlanEntity extends io.gravitee.rest.api.model.PlanEntity{
+
+        @JsonProperty("paths")
+        private Map<String, List<io.gravitee.rest.api.service.jackson.ser.api.common.Rule>> fixedPaths = new HashMap<>();
+
+        @JsonIgnore
+        @Override
+        public void setPaths(Map<String, List<Rule>> paths) {
+            super.setPaths(paths);
+        }
+
+        @JsonIgnore
+        @Override
+        public Map<String, List<Rule>> getPaths() {
+            return super.getPaths();
+        }
+
+        @JsonProperty("paths")
+        public Map<String, List<io.gravitee.rest.api.service.jackson.ser.api.common.Rule>> getFixedPaths() {
+            return fixedPaths;
+        }
+
+        @JsonProperty("paths")
+        public PlanEntity setFixedPaths(Map<String, List<io.gravitee.rest.api.service.jackson.ser.api.common.Rule>> fixedPaths) {
+            this.fixedPaths = fixedPaths;
+            return this;
+        }
+    }
 }

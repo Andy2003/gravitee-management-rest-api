@@ -55,7 +55,7 @@ public class RoleUserResource extends AbstractResource {
     @Permissions({
             @Permission(value = RolePermission.ORGANIZATION_ROLE, acls = RolePermissionAction.DELETE)
     })
-    public void deleteRoleForUsert(@PathParam("scope") RoleScope scope,
+    public void deleteRoleForUser(@PathParam("scope") RoleScope scope,
                        @PathParam("role") String role,
                        @PathParam("userId") String userId) {
         final Optional<RoleEntity> roleToRemove = roleService.findByScopeAndName(scope, role);

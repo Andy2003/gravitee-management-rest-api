@@ -17,7 +17,6 @@ package io.gravitee.rest.api.service.jackson.ser.api.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.gravitee.definition.model.Property;
-import io.gravitee.definition.model.Rule;
 import io.gravitee.definition.model.plugins.resources.Resource;
 import io.gravitee.definition.model.services.Services;
 import io.gravitee.rest.api.model.ApiMetadataEntity;

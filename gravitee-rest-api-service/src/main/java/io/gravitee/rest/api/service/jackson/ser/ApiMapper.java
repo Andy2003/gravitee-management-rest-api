@@ -17,10 +17,12 @@ package io.gravitee.rest.api.service.jackson.ser;
 
 import io.gravitee.definition.model.*;
 import io.gravitee.definition.model.endpoint.HttpEndpoint;
+import io.gravitee.rest.api.model.PlanEntity;
 import io.gravitee.rest.api.model.api.ApiEntity;
 import io.gravitee.rest.api.service.jackson.ser.api.common.ApiExport;
 import io.gravitee.rest.api.service.jackson.ser.api.common.ApiMappingConfig;
 import io.gravitee.rest.api.service.jackson.ser.api.common.BaseApiExport;
+import io.gravitee.rest.api.service.jackson.ser.api.common.Rule;
 import io.gravitee.rest.api.service.jackson.ser.api.v1_15.ApiV1_15;
 import io.gravitee.rest.api.service.jackson.ser.api.v1_15.ProxyBaseV1_15;
 import io.gravitee.rest.api.service.jackson.ser.api.v1_20.ApiV1_20;
@@ -61,6 +63,11 @@ public interface ApiMapper {
     @Mapping(target = "loggingMode", source = "logging.mode", defaultValue = "NONE")
     @Mapping(target = "endpoints", source = "groups")
     ApiV1_15.Proxy mapV1_15(Proxy proxy);
+
+    List<Rule> map(List<io.gravitee.definition.model.Rule> value);
+
+    @Mapping(target = "fixedPaths", source = "paths")
+    io.gravitee.rest.api.service.jackson.ser.api.v3_0.ApiV3_0.PlanEntity map(PlanEntity planEntity);
 
     default List<Endpoint> mapEndpointGroup(Collection<EndpointGroup> group) {
         return group.stream()
