@@ -2286,19 +2286,19 @@ public class ApiServiceImpl extends AbstractService implements ApiService {
                 .collect(toSet());
 
         // find reviewers in group attached to the API
-        this.findById(apiId).getGroups().forEach(group -> {
-            reviewerEmails.addAll(roleService.findByScope(RoleScope.API).stream()
-                    .filter(role -> this.roleService.hasPermission(role.getPermissions(), ApiPermission.REVIEWS, acls))
-                    .flatMap(role -> this.membershipService.getMembershipsByReferenceAndRole(MembershipReferenceType.GROUP, group, role.getId()).stream())
-                    .filter(m -> m.getMemberType().equals(MembershipMemberType.USER))
-                    .map(MembershipEntity::getMemberId)
-                    .distinct()
-                    .map(this.userService::findById)
-                    .map(UserEntity::getEmail)
-                    .filter(Objects::nonNull)
-                    .collect(toSet()));
-
-        });
+        Optional.ofNullable(this.findById(apiId))
+                .map(ApiEntity::getGroups)
+                .orElse(emptySet())
+                .forEach(group -> reviewerEmails.addAll(roleService.findByScope(RoleScope.API).stream()
+                        .filter(role -> this.roleService.hasPermission(role.getPermissions(), ApiPermission.REVIEWS, acls))
+                        .flatMap(role -> this.membershipService.getMembershipsByReferenceAndRole(MembershipReferenceType.GROUP, group, role.getId()).stream())
+                        .filter(m -> m.getMemberType().equals(MembershipMemberType.USER))
+                        .map(MembershipEntity::getMemberId)
+                        .distinct()
+                        .map(this.userService::findById)
+                        .map(UserEntity::getEmail)
+                        .filter(Objects::nonNull)
+                        .collect(toSet())));
 
         return new ArrayList<>(reviewerEmails);
     }

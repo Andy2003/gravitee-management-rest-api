@@ -15,6 +15,7 @@
  */
 package io.gravitee.rest.api.service;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
@@ -141,7 +142,9 @@ public class ApiService_UpdateTest {
     @Mock
     private RoleService roleService;
     @Spy
-    private ObjectMapper objectMapper = new GraviteeMapper();
+    private ObjectMapper objectMapper = new GraviteeMapper()
+            // TODO encodeURI in HttpClientOptions is unknown
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private UpdateApiEntity existingApi;
 
@@ -184,6 +187,8 @@ public class ApiService_UpdateTest {
         final SecurityContext securityContext = mock(SecurityContext.class);
         when(securityContext.getAuthentication()).thenReturn(mock(Authentication.class));
         SecurityContextHolder.setContext(securityContext);
+
+        when(parameterService.find(Key.PORTAL_ENTRYPOINT)).thenReturn("http://localhost");
 
         api = new Api();
         api.setId(API_ID);
