@@ -205,7 +205,7 @@ public class ApiSubscriptionResource extends AbstractResource {
     })
     public Response renewApiKey(
             @PathParam("subscription") String subscription,
-            @ApiParam(name = "customApiKey")
+            @Parameter(name = "customApiKey")
             @CustomApiKey @QueryParam("customApiKey") String customApiKey) {
 
         if (StringUtils.isNotEmpty(customApiKey)
@@ -265,7 +265,7 @@ public class ApiSubscriptionResource extends AbstractResource {
             @PathParam("subscription") String subscription,
             @PathParam("key") String apiKey) {
         ApiKeyEntity apiKeyEntity = apiKeyService.findByKey(apiKey);
-        if (apiKeyEntity.getSubscription() != null && ! subscription.equals(apiKeyEntity.getSubscription())) {
+        if (apiKeyEntity.getSubscription() != null && !subscription.equals(apiKeyEntity.getSubscription())) {
             return Response
                     .status(Response.Status.BAD_REQUEST)
                     .entity("'key' parameter does not correspond to the subscription")

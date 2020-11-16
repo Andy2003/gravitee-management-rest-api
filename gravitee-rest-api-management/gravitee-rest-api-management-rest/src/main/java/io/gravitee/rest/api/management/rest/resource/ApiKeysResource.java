@@ -88,7 +88,7 @@ public class ApiKeysResource extends AbstractResource {
     public Response updateApiKey(
             @PathParam("key") @Parameter(description = "The API key") String apiKey,
             @Valid @NotNull ApiKeyEntity apiKeyEntity) {
-        if (apiKeyEntity.getKey() != null && ! apiKey.equals(apiKeyEntity.getKey())) {
+        if (apiKeyEntity.getKey() != null && !apiKey.equals(apiKeyEntity.getKey())) {
             return Response
                     .status(Response.Status.BAD_REQUEST)
                     .entity("'apiKey' parameter does not correspond to the api-key to update")
@@ -106,17 +106,18 @@ public class ApiKeysResource extends AbstractResource {
     @Path("_verify")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Check if an API key is available",
-            notes = "User must have the API_SUBSCRIPTION:READ permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "API Key successfully checked", response = Boolean.class),
-            @ApiResponse(code = 400, message = "Bad API Key parameter"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Check if an API key is available",
+            description = "User must have the API_SUBSCRIPTION:READ permission to use this service")
+    @ApiResponse(responseCode = "200", description = "API Key successfully checked", content = @Content(
+            mediaType = MediaType.APPLICATION_JSON, schema = @Schema(type = "boolean")
+    ))
+    @ApiResponse(responseCode = "400", description = "Bad API Key parameter")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     @Permissions({
             @Permission(value = RolePermission.API_SUBSCRIPTION, acls = RolePermissionAction.READ)
     })
     public Response verifyApiKeyAvailability(
-            @ApiParam(name = "apiKey", required = true)
+            @Parameter(name = "apiKey", required = true)
             @CustomApiKey @NotNull @QueryParam("apiKey") String apiKey) {
 
         return Response

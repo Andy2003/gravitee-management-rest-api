@@ -26,19 +26,15 @@ import io.gravitee.rest.api.model.common.Sortable;
 import io.gravitee.rest.api.model.common.SortableImpl;
 import io.gravitee.rest.api.service.TicketService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 
@@ -47,7 +43,7 @@ import java.net.URI;
  * @author GraviteeSource Team
  */
 @Tag(name = "Platform Tickets")
-public class PlatformTicketsResource extends AbstractResource  {
+public class PlatformTicketsResource extends AbstractResource {
 
     @Inject
     private TicketService ticketService;
@@ -65,10 +61,10 @@ public class PlatformTicketsResource extends AbstractResource  {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Search for platform tickets written by current user")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "List platform tickets written by current user", response = TicketEntity.class, responseContainer = "Page"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Search for platform tickets written by current user")
+    @ApiResponse(responseCode = "200", description = "List platform tickets written by current user",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = TicketEntity.class)))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     public Page<TicketEntity> getTickets(
             @Valid @BeanParam Pageable pageable,
             @Valid @BeanParam TicketsParam ticketsParam) {
@@ -93,11 +89,11 @@ public class PlatformTicketsResource extends AbstractResource  {
     @GET
     @Path("/{ticket}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Get a specific ticket")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "Get a platform ticket", response = TicketEntity.class),
-            @ApiResponse(code = 404, message = "Ticket not found"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Get a specific ticket")
+    @ApiResponse(responseCode = "200", description = "Get a platform ticket",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = TicketEntity.class)))
+    @ApiResponse(responseCode = "404", description = "Ticket not found")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     public Response getTicket(@PathParam("ticket") String ticketId) {
 
         TicketEntity ticketEntity = ticketService.findById(ticketId);

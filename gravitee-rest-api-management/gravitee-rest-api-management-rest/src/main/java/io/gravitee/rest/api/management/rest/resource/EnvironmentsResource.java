@@ -17,7 +17,7 @@ package io.gravitee.rest.api.management.rest.resource;
 
 import io.gravitee.rest.api.model.EnvironmentEntity;
 import io.gravitee.rest.api.service.EnvironmentService;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -45,7 +45,7 @@ public class EnvironmentsResource extends AbstractResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "List available environments for current organization")
+    @Operation(summary = "List available environments for current organization")
     public Collection<EnvironmentEntity> list() {
         return this.environmentService.findAll();
     }

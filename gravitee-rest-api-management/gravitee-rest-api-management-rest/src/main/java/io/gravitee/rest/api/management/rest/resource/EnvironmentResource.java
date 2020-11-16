@@ -34,6 +34,9 @@ import io.gravitee.rest.api.service.configuration.identity.IdentityProviderActiv
 import io.gravitee.rest.api.service.configuration.identity.IdentityProviderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import javax.inject.Inject;
@@ -122,11 +125,11 @@ public class EnvironmentResource extends AbstractResource {
     @GET
     @Path("/identities")
     @Permissions(@Permission(value = RolePermission.ENVIRONMENT_IDENTITY_PROVIDER_ACTIVATION, acls = RolePermissionAction.READ))
-    @ApiOperation(value = "Get the list of identity provider activations for current environment",
-            notes = "User must have the ENVIRONMENT_IDENTITY_PROVIDER_ACTIVATION[READ] permission to use this service")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "List identity provider activations for current environment", response = IdentityProviderActivationEntity.class, responseContainer = "List"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Get the list of identity provider activations for current environment",
+            description = "User must have the ENVIRONMENT_IDENTITY_PROVIDER_ACTIVATION[READ] permission to use this service")
+    @ApiResponse(responseCode = "200", description = "List identity provider activations for current environment",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = IdentityProviderActivationEntity.class))))
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     public Set<IdentityProviderActivationEntity> getIdentityProviderActivations() {
         return identityProviderActivationService.findAllByTarget(new IdentityProviderActivationService.ActivationTarget(GraviteeContext.getCurrentEnvironment(), IdentityProviderActivationReferenceType.ENVIRONMENT));
     }
@@ -136,10 +139,9 @@ public class EnvironmentResource extends AbstractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Permissions(@Permission(value = RolePermission.ENVIRONMENT_IDENTITY_PROVIDER_ACTIVATION, acls = {RolePermissionAction.CREATE, RolePermissionAction.DELETE, RolePermissionAction.UPDATE}))
-    @ApiOperation(value = "Update available environment identities", tags = {"Environment"})
-    @ApiResponses({
-            @ApiResponse(code = 204, message = "Environment successfully updated"),
-            @ApiResponse(code = 500, message = "Internal server error")})
+    @Operation(summary = "Update available environment identities", tags = {"Environment"})
+    @ApiResponse(responseCode = "204", description = "Environment successfully updated")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
     public Response updateEnvironmentIdentities(List<IdentityProviderActivationEntity> identityProviderActivations) {
         this.identityProviderActivationService.updateTargetIdp(
                 new IdentityProviderActivationService.ActivationTarget(GraviteeContext.getCurrentEnvironment(), IdentityProviderActivationReferenceType.ENVIRONMENT),

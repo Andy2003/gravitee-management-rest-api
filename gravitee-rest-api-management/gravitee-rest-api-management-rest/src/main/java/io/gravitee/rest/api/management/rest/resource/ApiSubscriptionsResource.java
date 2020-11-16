@@ -147,7 +147,7 @@ public class ApiSubscriptionsResource extends AbstractResource {
             @NotNull @QueryParam("application") String application,
             @Parameter(name = "plan", required = true)
             @NotNull @QueryParam("plan") String plan,
-            @ApiParam(name = "customApiKey")
+            @Parameter(name = "customApiKey")
             @CustomApiKey @QueryParam("customApiKey") String customApiKey) {
 
         if (StringUtils.isNotEmpty(customApiKey)  &&
